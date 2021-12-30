@@ -124,7 +124,7 @@ def get_activations(data):
 
 
 # Wrap the model into a DkNNModel
-neighbors = 3
+neighbors = 5
 
 dknn = DkNNModel(
     neighbors=neighbors,
