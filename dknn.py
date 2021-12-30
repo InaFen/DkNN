@@ -92,12 +92,12 @@ class NearestNeighbor:
     ):
         import faiss
 
-        #following code should be used if GPU is used
-        #res = faiss.StandardGpuResources()
-        #self._faiss_index = faiss.GpuIndexFlatL2(
+        # following code should be used if GPU is used
+        # res = faiss.StandardGpuResources()
+        # self._faiss_index = faiss.GpuIndexFlatL2(
         #    res,
         #    dimension,
-        #)
+        # )
 
         self._faiss_index = faiss.IndexFlatL2(dimension)
 
@@ -117,7 +117,7 @@ class NearestNeighbor:
         missing_indices = np.zeros(output.shape, dtype=np.bool)
 
         for i in range(x.shape[0]):
-            #find k nearest neighbors for data point x[i]
+            # find k nearest neighbors for data point x[i]
             query_res = self._falconn_query_object.find_k_nearest_neighbors(
                 x[i], self._NEIGHBORS
             )
@@ -148,11 +148,13 @@ class NearestNeighbor:
             np.logical_not(missing_indices.flatten())
         ]
 
-        #get the actual data points of the knns in case there are needed later
+        # get the actual data points of the knns in case there are needed later
         knns_datapoints = []
         for point in range(len(neighbor_index)):
             for index in range(self._NEIGHBORS):
-                knns_datapoints.append(self._faiss_index.reconstruct(int(neighbor_index[point, index])))
+                knns_datapoints.append(
+                    self._faiss_index.reconstruct(int(neighbor_index[point, index]))
+                )
 
         return missing_indices, neighbor_distance, knns_datapoints
 
@@ -292,7 +294,7 @@ class DkNNModel(Model):
             ).reshape(-1, 1)
             data_activations_layer -= self.centers[layer]
 
-            #find indices of nearest neighbors in training data.
+            # find indices of nearest neighbors in training data.
             knns_ind[layer] = np.zeros(
                 (data_activations_layer.shape[0], self.neighbors), dtype=np.int32
             )
@@ -300,17 +302,19 @@ class DkNNModel(Model):
             knn_errors = 0
 
             if self.back_end is NearestNeighbor.BACKEND.FALCONN:
-                #FALCONN does not return distance
+                # FALCONN does not return distance
                 knn_missing_indices = self.query_objects[layer].find_knns(
                     data_activations_layer,
                     knns_ind[layer],
                 )
             elif self.back_end is NearestNeighbor.BACKEND.FAISS:
-                #FAISS returns distance
+                # FAISS returns distance
                 knns_distances[layer] = np.zeros(
                     (data_activations_layer.shape[0], self.neighbors), dtype=np.int32
                 )
-                knn_missing_indices, knn_distance, _ = self.query_objects[layer].find_knns(
+                knn_missing_indices, knn_distance, _ = self.query_objects[
+                    layer
+                ].find_knns(
                     data_activations_layer,
                     knns_ind[layer],
                 )
@@ -394,7 +398,7 @@ class DkNNModel(Model):
             creds[i, preds_knn[i]] = p_value[preds_knn[i]]
         return preds_knn, confs, creds
 
-    def fprop_np(self, data_np, get_knns = False):
+    def fprop_np(self, data_np, get_knns=False):
         """
         Performs a forward pass through the DkNN on an numpy array of data.
 
@@ -412,7 +416,9 @@ class DkNNModel(Model):
             if self.back_end is NearestNeighbor.BACKEND.FALCONN:
                 knns_ind, knns_labels = self.find_train_knns(data_activations)
             elif self.back_end is NearestNeighbor.BACKEND.FAISS:
-                knns_ind, knns_labels, knns_distances = self.find_train_knns(data_activations)
+                knns_ind, knns_labels, knns_distances = self.find_train_knns(
+                    data_activations
+                )
 
             knns_not_in_class = self.nonconformity(knns_labels)
             _, _, creds = self.preds_conf_cred(knns_not_in_class)
@@ -421,7 +427,7 @@ class DkNNModel(Model):
                 # FALCONN does not return distance
                 return creds, knns_ind, knns_labels
             elif self.back_end is NearestNeighbor.BACKEND.FAISS:
-                #FAISS returns distance
+                # FAISS returns distance
                 return creds, knns_ind, knns_labels, knns_distances
         else:
             data_activations = self.get_activations(data_np)
@@ -454,9 +460,13 @@ class DkNNModel(Model):
 
         print("Starting calibration of DkNN.")
         if self.back_end is NearestNeighbor.BACKEND.FALCONN:
-            cali_knns_ind, cali_knns_labels = self.find_train_knns(self.cali_activations)
+            cali_knns_ind, cali_knns_labels = self.find_train_knns(
+                self.cali_activations
+            )
         elif self.back_end is NearestNeighbor.BACKEND.FAISS:
-            cali_knns_ind, cali_knns_labels,_ = self.find_train_knns(self.cali_activations)
+            cali_knns_ind, cali_knns_labels, _ = self.find_train_knns(
+                self.cali_activations
+            )
         assert all(
             [v.shape == (self.nb_cali, self.neighbors) for v in cali_knns_ind.values()]
         )

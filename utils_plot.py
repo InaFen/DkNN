@@ -76,7 +76,9 @@ def plot_reliability_diagram(confidence, labels, filepath):
     plt.show()
 
 
-def plot_mean_knns_layer(knns_attribute, filepath, differences_knns_total, ylabel, xlabel, title):
+def plot_mean_knns_layer(
+    knns_attribute, filepath, differences_knns_total, ylabel, xlabel, title
+):
     """
     Creates bar graph of mean of knns for each layer for one data set.
 
@@ -88,7 +90,9 @@ def plot_mean_knns_layer(knns_attribute, filepath, differences_knns_total, ylabe
     # get mean of knns per layer
     mean_knns_layers = []
     for layer in range(1, len(knns_attribute)):
-        mean_knns_layers.append(np.mean(differences_knns_total.get("layer {}".format(layer))))
+        mean_knns_layers.append(
+            np.mean(differences_knns_total.get("layer {}".format(layer)))
+        )
 
     # plot mean
 
@@ -100,14 +104,25 @@ def plot_mean_knns_layer(knns_attribute, filepath, differences_knns_total, ylabe
     plt.title(title)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.xticks(x_pos,layers)
+    plt.xticks(x_pos, layers)
     plt.show()
 
     plt.savefig(filepath, bbox_inches="tight")
 
 
-def plot_changes_knns_3(mean_layers_1, mean_layers_2, mean_layers_3, knns_attribute, filepath, xlabel, ylabel, title,
-                        label_1='Train', label_2='Test', label_3='Noisy'):
+def plot_changes_knns_3(
+    mean_layers_1,
+    mean_layers_2,
+    mean_layers_3,
+    knns_attribute,
+    filepath,
+    xlabel,
+    ylabel,
+    title,
+    label_1="Train",
+    label_2="Test",
+    label_3="Noisy",
+):
     """
     Plot changes/differences of an knns attribute for 3 data sets (train, test, noisy).
 
