@@ -1,121 +1,104 @@
-from tensorflow.keras.layers import (
-    Input,
-    Conv2D,
-    Flatten,
-    Dense,
-    Dropout,
-    MaxPooling2D,
-    Activation,
-)
-from tensorflow.keras.models import Model
-
-import matplotlib.pyplot as plt
 import numpy as np
-from six.moves import xrange
+from collections import Counter
 
 
-def make_basic_cnn():
-    """Build a basic CNN.
-
-    :return: CNN model
+def get_differences_knns_btw_layers(data, knns_attribute):
     """
-    shape = (28, 28, 1)
-    i = Input(shape=shape)
-    x = Conv2D(32, (3, 3), strides=1, padding="same", activation="relu")(i)
-    x = MaxPooling2D()(x)
-    x = Conv2D(64, (3, 3), strides=1, padding="same", activation="relu")(x)
-    x = MaxPooling2D()(x)
-    x = Flatten()(x)
-    x = Dense(128, activation="relu")(x)
-    x = Dropout(0.2)(x)
-    x = Dense(10)(x)
-    # leave out the last Softmax in order to have logits and no softmax
-    # x = Activation('softmax')(x)
-    model = Model(i, x)
-    return model
+    Looks at the indices of the k nearest neighbors of data for each layer (DkNN) and outputs the changes of the knns between the layers.
 
-
-def make_shallow_basic_cnn():
-    """Build a basic CNN which lacks complexity.
-    The reason for this is to have a fast CNN for testing purposes.
-
-    :return: CNN model
+    :param data: the data for which the knns were found.
+    :param knns_attribute: indices or labels of knns
+    :return: changed_knns_all_points (e.g. point 2: {layer 1: [11][12]}) , differences_knns_all_points (e.g. point 2: {layer 1: 2}), differences_knns_sum (e.g. layer 2: [2,3,1])
     """
-    shape = (28, 28, 1)
-    i = Input(shape=shape)
-    x = Conv2D(32, (3, 3), strides=1, padding="same", activation="relu")(i)
-    x = MaxPooling2D()(x)
-    x = Flatten()(x)
-    x = Dense(10)(x)
-    model = Model(i, x)
-    return model
+    differences_knns_point = {}
+    changed_knns_point = {}
+    differences_knns_all_points = {}
+    changed_knns_all_points = {}
+    differences_knns_total = {}
+
+    for data_point in range(len(data)):
+        for layer in range(len(knns_attribute)):
+            if layer == 0:
+                knns_current_layer_point = knns_attribute[layer][1][data_point]
+            else:
+                knns_next_layer_point = knns_attribute[layer][1][data_point]
+                # compare whether same elements in nn_current_layer and nn_next_layer
+                if Counter(knns_current_layer_point) == Counter(knns_next_layer_point):
+                    knns_current_layer_point = knns_next_layer_point
+
+                    # save amount of changes for all points to be able to calculate mean later
+                    if "layer {}".format(layer) in differences_knns_total:
+                        differences_knns_total["layer {}".format(layer)].append(0)
+                    else:
+                        differences_knns_total["layer {}".format(layer)] = [0]
+                else:
+                    #save amount of changes (differences_knns_point), which knns changed (changed_knns_point)
+                    changed_knns = list(set(knns_current_layer_point) - set(knns_next_layer_point))
+                    differences_knns_point["layer {}".format(layer)] = len(changed_knns)
+                    changed_knns_point["layer {}".format(layer)] = (
+                    changed_knns, (list(set(knns_next_layer_point) - set(knns_current_layer_point))))
+
+                    #save amount of changes for all points to be able to calculate mean later
+                    if "layer {}".format(layer) in differences_knns_total:
+                        differences_knns_total["layer {}".format(layer)].append(len(changed_knns))
+                    else:
+                        differences_knns_total["layer {}".format(layer)] = [(len(changed_knns))]
+
+        differences_knns_all_points["point {}".format(data_point)] = differences_knns_point
+        changed_knns_all_points["point {}".format(data_point)] = changed_knns_point
+    return changed_knns_all_points, differences_knns_all_points, differences_knns_total
 
 
-def plot_reliability_diagram(confidence, labels, filepath):
+def get_mean_knns_layer(knns_attribute, differences_knns_total):
     """
-    Takes in confidence values for predictions and correct
-    labels for the data, plots a reliability diagram.
+    Get the mean of an attribute of the knns per inbetween two layers, e.g. mean of changes of knns btw. two layers
 
-    :param confidence: nb_samples x nb_classes (e.g., output of softmax)
-    :param labels: vector of nb_samples
-    :param filepath: where to save the diagram
+    :param knns_attribute: indices or labels of knns
+    :param differences_knns_total: how many changes in knns have happened between two layers
+    :return: mean_knns_layers
     """
-    assert len(confidence.shape) == 2
-    assert len(labels.shape) == 1
-    assert confidence.shape[0] == labels.shape[0]
-    print("Saving reliability diagram at: " + str(filepath))
-    if confidence.max() <= 1.0:
-        # confidence array is output of softmax
-        bins_start = [b / 10.0 for b in xrange(0, 10)]
-        bins_end = [b / 10.0 for b in xrange(1, 11)]
-        bins_center = [(b + 0.5) / 10.0 for b in xrange(0, 10)]
-        preds_conf = np.max(confidence, axis=1)
-        preds_l = np.argmax(confidence, axis=1)
-    else:
-        raise ValueError("Confidence values go above 1.")
 
-    print(preds_conf.shape, preds_l.shape)
+    # get mean of knns per layer
+    mean_knns_layers = []
+    for layer in range(1, len(knns_attribute)):
+        mean_knns_layers.append(np.mean(differences_knns_total.get("layer {}".format(layer))))
+    return mean_knns_layers
 
-    # Create var for reliability diagram
-    # Will contain mean accuracies for each bin
-    reliability_diag = []
-    num_points = []  # keeps the number of points in each bar
 
-    # Find average accuracy per confidence bin
-    for bin_start, bin_end in zip(bins_start, bins_end):
-        above = preds_conf >= bin_start
-        if bin_end == 1.0:
-            below = preds_conf <= bin_end
-        else:
-            below = preds_conf < bin_end
-        mask = np.multiply(above, below)
-        num_points.append(np.sum(mask))
-        bin_mean_acc = max(0, np.mean(preds_l[mask] == labels[mask]))
-        reliability_diag.append(bin_mean_acc)
+def get_distances_of_knns(data, knns_distances):
+    """
+    Put distances of all knns in an dict with layers as keys
 
-    # Plot diagram
-    assert len(reliability_diag) == len(bins_center)
-    print(reliability_diag)
-    print(bins_center)
-    print(num_points)
-    fig, ax1 = plt.subplots()
-    _ = ax1.bar(bins_center, reliability_diag, width=0.1, alpha=0.8)
-    plt.xlim([0, 1.0])
-    ax1.set_ylim([0, 1.0])
+    :param data: data
+    :param knns_distances: distances of knns
+    :return: distances_knns_all
+    """
+    distances_knns_all = {}
 
-    ax2 = ax1.twinx()
-    print(sum(num_points))
-    ax2.plot(bins_center, num_points, color="r", linestyle="-", linewidth=7.0)
-    ax2.set_ylabel("Number of points in the data", fontsize=16, color="r")
+    for data_point in range(len(data)):
+        for layer in range(len(knns_distances)):
 
-    if len(np.argwhere(confidence[0] != 0.0)) == 1:
-        # This is a DkNN diagram
-        ax1.set_xlabel("Prediction Credibility", fontsize=16)
-    else:
-        # This is a softmax diagram
-        ax1.set_xlabel("Prediction Confidence", fontsize=16)
-    ax1.set_ylabel("Prediction Accuracy", fontsize=16)
-    ax1.tick_params(axis="both", labelsize=14)
-    ax2.tick_params(axis="both", labelsize=14, colors="r")
-    fig.tight_layout()
-    plt.savefig(filepath, bbox_inches="tight")
+            if "layer {}".format(layer) in distances_knns_all:
+                distances_knns_all["layer {}".format(layer)].append(knns_distances[layer][1][data_point])
+            else:
+                distances_knns_all["layer {}".format(layer)] = [knns_distances[layer][1][data_point]]
+    return distances_knns_all
+
+
+def get_mean_distances_of_knns(distances_knns_all, knns_distances):
+    """
+    Get the mean distance of knns for one layer.
+
+    :param distances_knns_all: distance of all knns as dict with layers as keys
+    :param knns_distances: distances of knns as list
+    :return: mean_distances_knns_layers
+    """
+    mean_distances_knns_layers = []
+    for layer in range(1, len(knns_distances)):
+        mean_distances_knns_layers.append(np.mean(distances_knns_all.get("layer {}".format(layer))))
+    return mean_distances_knns_layers
+
+
+
+
+

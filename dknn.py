@@ -92,12 +92,14 @@ class NearestNeighbor:
     ):
         import faiss
 
-        res = faiss.StandardGpuResources()
+        #following code should be used if GPU is used
+        #res = faiss.StandardGpuResources()
+        #self._faiss_index = faiss.GpuIndexFlatL2(
+        #    res,
+        #    dimension,
+        #)
 
-        self._faiss_index = faiss.GpuIndexFlatL2(
-            res,
-            dimension,
-        )
+        self._faiss_index = faiss.IndexFlatL2(dimension)
 
     def _find_knns_falconn(self, x, output):
         """
@@ -115,10 +117,10 @@ class NearestNeighbor:
         missing_indices = np.zeros(output.shape, dtype=np.bool)
 
         for i in range(x.shape[0]):
+            #find k nearest neighbors for data point x[i]
             query_res = self._falconn_query_object.find_k_nearest_neighbors(
                 x[i], self._NEIGHBORS
             )
-
             try:
                 output[i, :] = query_res
             except:  # pylint: disable-msg=W0702
@@ -126,7 +128,6 @@ class NearestNeighbor:
                 missing_indices[i, len(query_res) :] = True
 
                 output[i, : len(query_res)] = query_res
-
         return missing_indices
 
     def _find_knns_faiss(self, x, output):
@@ -135,7 +136,7 @@ class NearestNeighbor:
 
         :param x: tensor, feature vector of input of layer.
         :param output: output of layer.
-        :return: missing_indices
+        :return: missing_indices, neighbor_distance, knns_datapoints
         """
         neighbor_distance, neighbor_index = self._faiss_index.search(x, self._NEIGHBORS)
 
@@ -147,11 +148,17 @@ class NearestNeighbor:
             np.logical_not(missing_indices.flatten())
         ]
 
-        return missing_indices
+        #get the actual data points of the knns in case there are needed later
+        knns_datapoints = []
+        for point in range(len(neighbor_index)):
+            for index in range(self._NEIGHBORS):
+                knns_datapoints.append(self._faiss_index.reconstruct(int(neighbor_index[point, index])))
+
+        return missing_indices, neighbor_distance, knns_datapoints
 
     def add(self, x):
         """
-        Depending on used library, add x.
+        Depending on used library, add x to index/table for finding knns.
 
         :param x: tensor, feature vector of input of layer.
         """
@@ -168,7 +175,6 @@ class NearestNeighbor:
 
         :param x: tensor, feature vector of input of layer.
         :param output: output of layer.
-        :return: missing_indices
         """
         if self._BACKEND is NearestNeighbor.BACKEND.FALCONN:
             return self._find_knns_falconn(x, output)
@@ -241,7 +247,7 @@ class DkNNModel(Model):
         # NearestNeighbor).
         self.centers = {}
         for layer in self.nb_layers:
-            # Normalize all the lenghts, since we care about the cosine similarity.
+            # Normalize all the lengths, since we care about the cosine similarity.
             self.train_activations_lsh[layer] /= np.linalg.norm(
                 self.train_activations_lsh[layer], axis=1
             ).reshape(-1, 1)
@@ -271,10 +277,11 @@ class DkNNModel(Model):
         find the knns in the training data.
 
         :param data_activations: dictionary that contains a np array with activations for each layer.
-        :return: knns_ind (indices of k nearest neighbors), knns_labels (labels of k nearest neighbors).
+        :return: knns_ind (indices of k nearest neighbors), knns_labels (labels of k nearest neighbors), for FAISS: knns_distances (distances of k nearest neighbors)
         """
         knns_ind = {}
         knns_labels = {}
+        knns_distances = {}
 
         for layer in self.nb_layers:
             # Pre-process representations of data to normalize and remove training data mean.
@@ -285,16 +292,29 @@ class DkNNModel(Model):
             ).reshape(-1, 1)
             data_activations_layer -= self.centers[layer]
 
-            # Use FALCONN to find indices of nearest neighbors in training data.
+            #find indices of nearest neighbors in training data.
             knns_ind[layer] = np.zeros(
                 (data_activations_layer.shape[0], self.neighbors), dtype=np.int32
             )
+
             knn_errors = 0
 
-            knn_missing_indices = self.query_objects[layer].find_knns(
-                data_activations_layer,
-                knns_ind[layer],
-            )
+            if self.back_end is NearestNeighbor.BACKEND.FALCONN:
+                #FALCONN does not return distance
+                knn_missing_indices = self.query_objects[layer].find_knns(
+                    data_activations_layer,
+                    knns_ind[layer],
+                )
+            elif self.back_end is NearestNeighbor.BACKEND.FAISS:
+                #FAISS returns distance
+                knns_distances[layer] = np.zeros(
+                    (data_activations_layer.shape[0], self.neighbors), dtype=np.int32
+                )
+                knn_missing_indices, knn_distance, _ = self.query_objects[layer].find_knns(
+                    data_activations_layer,
+                    knns_ind[layer],
+                )
+                knns_distances[layer] = knn_distance
 
             knn_errors += knn_missing_indices.flatten().sum()
 
@@ -308,8 +328,12 @@ class DkNNModel(Model):
                     np.logical_not(knn_missing_indices.flatten())
                 ]
             ]
-
-        return knns_ind, knns_labels
+        if self.back_end is NearestNeighbor.BACKEND.FALCONN:
+            # FALCONN does not return distance
+            return knns_ind, knns_labels
+        elif self.back_end is NearestNeighbor.BACKEND.FAISS:
+            # FAISS returns distance
+            return knns_ind, knns_labels, knns_distances
 
     def nonconformity(self, knns_labels):
         """
@@ -370,22 +394,41 @@ class DkNNModel(Model):
             creds[i, preds_knn[i]] = p_value[preds_knn[i]]
         return preds_knn, confs, creds
 
-    def fprop_np(self, data_np):
+    def fprop_np(self, data_np, get_knns = False):
         """
         Performs a forward pass through the DkNN on an numpy array of data.
 
         :param data_np: numpy array of data
+        :param get_knns: if True, get details about the knns as output (index, label, and distance for FAISS)
         :return: creds (credibility)
         """
         if not self.calibrated:
             raise ValueError(
                 "DkNN needs to be calibrated by calling DkNNModel.calibrate method once before inferring."
             )
-        data_activations = self.get_activations(data_np)
-        _, knns_labels = self.find_train_knns(data_activations)
-        knns_not_in_class = self.nonconformity(knns_labels)
-        _, _, creds = self.preds_conf_cred(knns_not_in_class)
-        return creds
+        if get_knns:
+            data_activations = self.get_activations(data_np)
+
+            if self.back_end is NearestNeighbor.BACKEND.FALCONN:
+                knns_ind, knns_labels = self.find_train_knns(data_activations)
+            elif self.back_end is NearestNeighbor.BACKEND.FAISS:
+                knns_ind, knns_labels, knns_distances = self.find_train_knns(data_activations)
+
+            knns_not_in_class = self.nonconformity(knns_labels)
+            _, _, creds = self.preds_conf_cred(knns_not_in_class)
+
+            if self.back_end is NearestNeighbor.BACKEND.FALCONN:
+                # FALCONN does not return distance
+                return creds, knns_ind, knns_labels
+            elif self.back_end is NearestNeighbor.BACKEND.FAISS:
+                #FAISS returns distance
+                return creds, knns_ind, knns_labels, knns_distances
+        else:
+            data_activations = self.get_activations(data_np)
+            _, knns_labels = self.find_train_knns(data_activations)
+            knns_not_in_class = self.nonconformity(knns_labels)
+            _, _, creds = self.preds_conf_cred(knns_not_in_class)
+            return creds
 
     def fprop(self, x):
         """
@@ -410,10 +453,10 @@ class DkNNModel(Model):
         self.cali_labels = cali_labels
 
         print("Starting calibration of DkNN.")
-        cali_knns_ind, cali_knns_labels = self.find_train_knns(self.cali_activations)
-        print("cali_knns_ind.values()", cali_knns_ind.values())
-        print("cali_knns_labels.values()", cali_knns_labels.values())
-        print("self.nb_cali, self.neighbors) ", self.nb_cali, self.neighbors)
+        if self.back_end is NearestNeighbor.BACKEND.FALCONN:
+            cali_knns_ind, cali_knns_labels = self.find_train_knns(self.cali_activations)
+        elif self.back_end is NearestNeighbor.BACKEND.FAISS:
+            cali_knns_ind, cali_knns_labels,_ = self.find_train_knns(self.cali_activations)
         assert all(
             [v.shape == (self.nb_cali, self.neighbors) for v in cali_knns_ind.values()]
         )
