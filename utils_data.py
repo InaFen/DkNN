@@ -1,4 +1,4 @@
-#source: https: // github.com / privML / privacy - evaluator / blob / main / privacy_evaluator / utils / data_adaptation.py
+# source: https: // github.com / privML / privacy - evaluator / blob / main / privacy_evaluator / utils / data_adaptation.py
 
 import numpy as np
 from copy import deepcopy
@@ -42,6 +42,7 @@ def _brighten_image(image: np.ndarray, brightness: int):
             else:
                 image[x, y] = image[x, y] + brightness
 
+
 def random_noise_images(
     images: np.ndarray, mean: float = MEAN, std: float = STD, **kwargs
 ):
@@ -71,6 +72,7 @@ def random_noise_images(
     images = np.uint8(np.clip(images, 0, 255))
 
     return images
+
 
 def mask_images(images: np.ndarray, box_len: int = BOX_LEN, **kwargs) -> np.ndarray:
     """
