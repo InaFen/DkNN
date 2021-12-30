@@ -88,8 +88,8 @@ test_data = X_test[nb_cali:]
 y_test = y_test[nb_cali:]
 
 # noisy data (brightness)
-noisy_data = brighten_images(X_test[:1000], 50)
-y_noisy = y_test[:1000]
+noisy_data = brighten_images(X_test[nb_cali:])
+y_noisy = y_test[nb_cali:]
 noisy_labels = y_noisy
 
 # Define callable that returns a dictionary of all activations for a dataset
@@ -140,7 +140,7 @@ dknn.calibrate(cali_data, cali_labels)
 print("Calibrated the model")
 
 # forward propagation through DkNN
-amount_data = 4
+amount_data = 10000
 # for test data
 _, knns_ind_test, knns_labels_test, knns_distances_test = dknn.fprop_np(
     test_data[:amount_data], get_knns=True
@@ -199,10 +199,10 @@ plot_changes_knns_3(
 # analyse changes labels
 # get how many changes in labels of knns have happened between two layers
 _, _, differences_labels_total_training = get_differences_knns_btw_layers(
-    train_data[:amount_data], knns_labels_list_test
+    train_data[:amount_data], knns_labels_list_train
 )
 _, _, differences_labels_total_test = get_differences_knns_btw_layers(
-    test_data[:amount_data], knns_labels_list_train
+    test_data[:amount_data], knns_labels_list_test
 )
 _, _, differences_labels_total_noisy = get_differences_knns_btw_layers(
     noisy_data[:amount_data], knns_labels_list_noisy
