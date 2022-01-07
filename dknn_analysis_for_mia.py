@@ -15,9 +15,12 @@ import matplotlib
 import numpy as np
 import tensorflow as tf
 
+import faiss
+
 import time
 
 start_time = time.time()
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 if "DISPLAY" not in os.environ:
     matplotlib.use("Agg")

@@ -2,21 +2,26 @@ import numpy as np
 from collections import Counter
 
 
-def get_differences_knns_btw_layers(data, knns_attribute):
+def get_differences_knns_btw_layers(data, knns_attribute, num_instead_of_data = False):
     """
-    Looks at the indices of the k nearest neighbors of data for each layer (DkNN) and outputs the changes of the knns between the layers.
+    Looks at an attribute of the k nearest neighbors of data for each layer (DkNN) and outputs the changes of the knns between the layers.
 
     :param data: the data for which the knns were found.
     :param knns_attribute: indices or labels of knns
     :return: changed_knns_all_points (e.g. point 2: {layer 1: [11][12]}) , differences_knns_all_points (e.g. point 2: {layer 1: 2}), differences_knns_sum (e.g. layer 2: [2,3,1])
     """
+    #TODO add description num instead of data
     differences_knns_point = {}
     changed_knns_point = {}
     differences_knns_all_points = {}
     changed_knns_all_points = {}
     differences_knns_total = {}
 
-    for data_point in range(len(data)):
+    if num_instead_of_data:
+        amount_data = data
+    else:
+        amount_data = len(data)
+    for data_point in range(amount_data):
         for layer in range(len(knns_attribute)):
             if layer == 0:
                 knns_current_layer_point = knns_attribute[layer][1][data_point]
