@@ -160,7 +160,18 @@ def plot_changes_knns_3(
     plt.savefig(filepath, bbox_inches="tight")
     plt.clf()
 
-def plot_member_non_member_layer_experiments_scatter(attribute_knns_layers_member_all, attribute_knns_layers_non_member_all, experiment_setups, layer, filepath , train_accuracy, test_accuracy, ylabel = "Mean of knn changes", suptitle = "Mean of changes in knns btw. layer {} & {}" ):
+
+def plot_member_non_member_layer_experiments_scatter(
+    attribute_knns_layers_member_all,
+    attribute_knns_layers_non_member_all,
+    experiment_setups,
+    layer,
+    filepath,
+    train_accuracy,
+    test_accuracy,
+    ylabel="Mean of knn changes",
+    suptitle="Mean of changes in knns btw. layer {} & {}",
+):
     """
     Plot an attribute (e.g. the mean of changes in knns btw two layers) of the member and non-member data of all experiments for one layer/ for inbetween two layers as a scatter plot.
 
@@ -184,26 +195,39 @@ def plot_member_non_member_layer_experiments_scatter(attribute_knns_layers_membe
         y_member_1.append(attribute_knns_layers_member_all[experiment][layer])
         y_non_member_1.append(attribute_knns_layers_non_member_all[experiment][layer])
 
-    plt.scatter(x_member, y_member_1, label = "Member")
-    plt.scatter(x_non_member, y_non_member_1, label = "Non-Member")
-    plt.plot(x_member, y_member_1, linestyle = 'None') #'-o' to connect dots if wanted
-    plt.plot(x_non_member, y_non_member_1, linestyle = 'None') #'-o' to connect dots if wanted
-
+    plt.scatter(x_member, y_member_1, label="Member")
+    plt.scatter(x_non_member, y_non_member_1, label="Non-Member")
+    plt.plot(x_member, y_member_1, linestyle="None")  #'-o' to connect dots if wanted
+    plt.plot(
+        x_non_member, y_non_member_1, linestyle="None"
+    )  #'-o' to connect dots if wanted
 
     X_axis = np.arange(len(experiment_setups))
-    plt.xticks(X_axis, experiment_setups, fontsize = 5, rotation = 90)
+    plt.xticks(X_axis, experiment_setups, fontsize=5, rotation=90)
     plt.xlabel("Experiments")
     plt.ylabel(ylabel)
-    plt.suptitle(suptitle.format(layer, layer+1), fontsize = 18)
-    plt.title("Model: Lenet-5, Train Acc: {}, Test Acc: {}".format(round(train_accuracy[1], ndigits=4), round(test_accuracy[1], ndigits=4)), fontsize = 10)
+    plt.suptitle(suptitle.format(layer, layer + 1), fontsize=18)
+    plt.title(
+        "Model: Lenet-5, Train Acc: {}, Test Acc: {}".format(
+            round(train_accuracy[1], ndigits=4), round(test_accuracy[1], ndigits=4)
+        ),
+        fontsize=10,
+    )
     plt.legend()
     plt.savefig(filepath, bbox_inches="tight")
     plt.show()
     plt.clf()
 
 
-def plot_mean_layer_experiments_all(mean_knns_layers_member_all, mean_knns_layers_non_member_all, experiment_setups,
-                                    layer, filepath, train_accuracy, test_accuracy):
+def plot_mean_layer_experiments_all(
+    mean_knns_layers_member_all,
+    mean_knns_layers_non_member_all,
+    experiment_setups,
+    layer,
+    filepath,
+    train_accuracy,
+    test_accuracy,
+):
     """
     To plot the mean of changes in knns btw. two layers, for all layers.
     This function is specialised for only this use and has to be generalised to be able to be used more broadly. #TODO
@@ -243,62 +267,144 @@ def plot_mean_layer_experiments_all(mean_knns_layers_member_all, mean_knns_layer
         y_non_member_4.append(mean_knns_layers_non_member_all[experiment][layer + 3])
     # xticks.append(experiment_setups[experiment])
 
-    member_dict_1 = {'Experiments': x_member, 'Mean of knn changes': y_member_1}
-    non_member_dict_1 = {'Experiments': x_non_member, 'Mean of knn changes': y_non_member_1}
+    member_dict_1 = {"Experiments": x_member, "Mean of knn changes": y_member_1}
+    non_member_dict_1 = {
+        "Experiments": x_non_member,
+        "Mean of knn changes": y_non_member_1,
+    }
     member_dataframe_1 = pd.DataFrame(member_dict_1)
     non_member_dataframe_1 = pd.DataFrame(non_member_dict_1)
     concatenated_1 = pd.concat(
-        [member_dataframe_1.assign(dataset='member'), non_member_dataframe_1.assign(dataset='non_member')])
+        [
+            member_dataframe_1.assign(dataset="member"),
+            non_member_dataframe_1.assign(dataset="non_member"),
+        ]
+    )
 
-    member_dict_2 = {'Experiments': x_member, 'Mean of knn changes': y_member_2}
-    non_member_dict_2 = {'Experiments': x_non_member, 'Mean of knn changes': y_non_member_2}
+    member_dict_2 = {"Experiments": x_member, "Mean of knn changes": y_member_2}
+    non_member_dict_2 = {
+        "Experiments": x_non_member,
+        "Mean of knn changes": y_non_member_2,
+    }
     member_dataframe_2 = pd.DataFrame(member_dict_2)
     non_member_dataframe_2 = pd.DataFrame(non_member_dict_2)
     concatenated_2 = pd.concat(
-        [member_dataframe_2.assign(dataset='member2'), non_member_dataframe_2.assign(dataset='non_member2')])
+        [
+            member_dataframe_2.assign(dataset="member2"),
+            non_member_dataframe_2.assign(dataset="non_member2"),
+        ]
+    )
 
-    member_dict_3 = {'Experiments': x_member, 'Mean of knn changes': y_member_3}
-    non_member_dict_3 = {'Experiments': x_non_member, 'Mean of knn changes': y_non_member_3}
+    member_dict_3 = {"Experiments": x_member, "Mean of knn changes": y_member_3}
+    non_member_dict_3 = {
+        "Experiments": x_non_member,
+        "Mean of knn changes": y_non_member_3,
+    }
     member_dataframe_3 = pd.DataFrame(member_dict_3)
     non_member_dataframe_3 = pd.DataFrame(non_member_dict_3)
     concatenated_3 = pd.concat(
-        [member_dataframe_3.assign(dataset='member3'), non_member_dataframe_3.assign(dataset='non_member3')])
+        [
+            member_dataframe_3.assign(dataset="member3"),
+            non_member_dataframe_3.assign(dataset="non_member3"),
+        ]
+    )
 
-    member_dict_4 = {'Experiments': x_member, 'Mean of knn changes': y_member_4}
-    non_member_dict_4 = {'Experiments': x_non_member, 'Mean of knn changes': y_non_member_4}
+    member_dict_4 = {"Experiments": x_member, "Mean of knn changes": y_member_4}
+    non_member_dict_4 = {
+        "Experiments": x_non_member,
+        "Mean of knn changes": y_non_member_4,
+    }
     member_dataframe_4 = pd.DataFrame(member_dict_4)
     non_member_dataframe_4 = pd.DataFrame(non_member_dict_4)
     concatenated_4 = pd.concat(
-        [member_dataframe_4.assign(dataset='member4'), non_member_dataframe_4.assign(dataset='non_member4')])
+        [
+            member_dataframe_4.assign(dataset="member4"),
+            non_member_dataframe_4.assign(dataset="non_member4"),
+        ]
+    )
 
     sns.set()
     fig, axes = plt.subplots(4, 1, sharex=True)
-    fig.suptitle('Mean of changes in knns btw. layers (Model: Lenet-5, Train Acc: {}, Test Acc: {})'.format(
-        round(train_accuracy[1], ndigits=4), round(test_accuracy[1], ndigits=4)))
-    sns.scatterplot(ax=axes[0], x='Experiments', y='Mean of knn changes', data=concatenated_1, style='dataset',
-                    palette=['blue', 'orange'], hue='dataset', legend=True)
-    sns.scatterplot(ax=axes[1], x='Experiments', y='Mean of knn changes', data=concatenated_2, style='dataset',
-                    palette=['blue', 'orange'], hue='dataset', legend=False)
-    sns.scatterplot(ax=axes[2], x='Experiments', y='Mean of knn changes', data=concatenated_3, style='dataset',
-                    palette=['blue', 'orange'], hue='dataset', legend=False)
-    sns.scatterplot(ax=axes[3], x='Experiments', y='Mean of knn changes', data=concatenated_4, style='dataset',
-                    palette=['blue', 'orange'], hue='dataset', legend=False)
-    axes[0].set_title('Mean of changes in knns btw. layer {} & {}'.format(layer, layer + 1), fontsize=8)
-    axes[1].set_title('Mean of changes in knns btw. layer {} & {}'.format(layer + 1, layer + 2), fontsize=8)
-    axes[2].set_title('Mean of changes in knns btw. layer {} & {}'.format(layer + 2, layer + 3), fontsize=8)
-    axes[3].set_title('Mean of changes in knns btw. layer {} & {}'.format(layer + 3, layer + 4), fontsize=8)
-    axes[0].set_ylabel('')
-    axes[1].set_ylabel('')
-    axes[3].set_ylabel('')
+    fig.suptitle(
+        "Mean of changes in knns btw. layers (Model: Lenet-5, Train Acc: {}, Test Acc: {})".format(
+            round(train_accuracy[1], ndigits=4), round(test_accuracy[1], ndigits=4)
+        )
+    )
+    sns.scatterplot(
+        ax=axes[0],
+        x="Experiments",
+        y="Mean of knn changes",
+        data=concatenated_1,
+        style="dataset",
+        palette=["blue", "orange"],
+        hue="dataset",
+        legend=True,
+    )
+    sns.scatterplot(
+        ax=axes[1],
+        x="Experiments",
+        y="Mean of knn changes",
+        data=concatenated_2,
+        style="dataset",
+        palette=["blue", "orange"],
+        hue="dataset",
+        legend=False,
+    )
+    sns.scatterplot(
+        ax=axes[2],
+        x="Experiments",
+        y="Mean of knn changes",
+        data=concatenated_3,
+        style="dataset",
+        palette=["blue", "orange"],
+        hue="dataset",
+        legend=False,
+    )
+    sns.scatterplot(
+        ax=axes[3],
+        x="Experiments",
+        y="Mean of knn changes",
+        data=concatenated_4,
+        style="dataset",
+        palette=["blue", "orange"],
+        hue="dataset",
+        legend=False,
+    )
+    axes[0].set_title(
+        "Mean of changes in knns btw. layer {} & {}".format(layer, layer + 1),
+        fontsize=8,
+    )
+    axes[1].set_title(
+        "Mean of changes in knns btw. layer {} & {}".format(layer + 1, layer + 2),
+        fontsize=8,
+    )
+    axes[2].set_title(
+        "Mean of changes in knns btw. layer {} & {}".format(layer + 2, layer + 3),
+        fontsize=8,
+    )
+    axes[3].set_title(
+        "Mean of changes in knns btw. layer {} & {}".format(layer + 3, layer + 4),
+        fontsize=8,
+    )
+    axes[0].set_ylabel("")
+    axes[1].set_ylabel("")
+    axes[3].set_ylabel("")
     # axes[0].legend()
     # axes[3].xlabel("Experiments")
-    axes[0].legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    axes[0].legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
 
     plt.savefig(filepath, bbox_inches="tight")
     plt.show()
 
 
-def plot_member_non_member_experiments_histogram(sum_similarities_knns_member_all_experiment, sum_similarities_knns_non_member_all_experiment, train_accuracy, test_accuracy, bins, filepath):
+def plot_member_non_member_experiments_histogram(
+    sum_similarities_knns_member_all_experiment,
+    sum_similarities_knns_non_member_all_experiment,
+    train_accuracy,
+    test_accuracy,
+    bins,
+    filepath,
+):
     """
     Plot histogram of sum of similar knns of member and non-member data.
     This function is specialised for only this use and has to be generalised to be able to be used more broadly. #TODO
@@ -309,16 +415,36 @@ def plot_member_non_member_experiments_histogram(sum_similarities_knns_member_al
     :param filepath:
     :return:
     """
-    plt.hist(sum_similarities_knns_member_all_experiment, bins = bins, alpha=0.5, label="Member", linewidth=1.2, edgecolor='black')
-    plt.hist(sum_similarities_knns_non_member_all_experiment, bins = bins, alpha=0.5, label="Non-Member", linewidth=1.2, edgecolor='black')
+    plt.hist(
+        sum_similarities_knns_member_all_experiment,
+        bins=bins,
+        alpha=0.5,
+        label="Member",
+        linewidth=1.2,
+        edgecolor="black",
+    )
+    plt.hist(
+        sum_similarities_knns_non_member_all_experiment,
+        bins=bins,
+        alpha=0.5,
+        label="Non-Member",
+        linewidth=1.2,
+        edgecolor="black",
+    )
     plt.plot()
-    #plt.plot(x_non_member, y_non_member_1, linestyle='None')  # '-o' to connect dots if wanted
+    # plt.plot(x_non_member, y_non_member_1, linestyle='None')  # '-o' to connect dots if wanted
 
-    plt.xlabel("Sum of consistent knns (= nns, that stay knns in all layers) (sum for all points and for all layers)")
+    plt.xlabel(
+        "Sum of consistent knns (= nns, that stay knns in all layers) (sum for all points and for all layers)"
+    )
     plt.ylabel("Amount of experiments")
     plt.suptitle("Distribution of sum of consistent knns")
-    plt.title("Model: Lenet-5, Train Acc: {}, Test Acc: {}".format(round(train_accuracy[1], ndigits=4),
-                                                                   round(test_accuracy[1], ndigits=4)), fontsize=10)
+    plt.title(
+        "Model: Lenet-5, Train Acc: {}, Test Acc: {}".format(
+            round(train_accuracy[1], ndigits=4), round(test_accuracy[1], ndigits=4)
+        ),
+        fontsize=10,
+    )
     plt.legend()
     plt.savefig(filepath, bbox_inches="tight")
     plt.show()

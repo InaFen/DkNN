@@ -2,7 +2,12 @@ import numpy as np
 from collections import Counter, defaultdict
 
 
-def get_differences_knns_btw_layers(data, knns_attribute, num_instead_of_data = False, compares_with_first_layer_only = False):
+def get_differences_knns_btw_layers(
+    data,
+    knns_attribute,
+    num_instead_of_data=False,
+    compares_with_first_layer_only=False,
+):
     """
     Looks at an attribute of the k nearest neighbors of data for each layer (DkNN) and outputs the changes of the knns between the layers.
 
@@ -10,7 +15,7 @@ def get_differences_knns_btw_layers(data, knns_attribute, num_instead_of_data = 
     :param knns_attribute: indices or labels of knns
     :return: changed_knns_all_points (e.g. point 2: {layer 1: [11][12]}) , differences_knns_all_points (e.g. point 2: {layer 1: 2}), differences_knns_sum (e.g. layer 2: [2,3,1])
     """
-    #TODO add description num instead of data
+    # TODO add description num instead of data
     differences_knns_point = {}
     changed_knns_point = {}
     differences_knns_all_points = {}
@@ -51,7 +56,7 @@ def get_differences_knns_btw_layers(data, knns_attribute, num_instead_of_data = 
                     )
 
                     # save amount of changes for all points to be able to calculate mean later
-                    #TODO never goes in if
+                    # TODO never goes in if
                     if "layer {}".format(layer) in differences_knns_total:
                         differences_knns_total["layer {}".format(layer)].append(
                             len(changed_knns)
@@ -61,7 +66,7 @@ def get_differences_knns_btw_layers(data, knns_attribute, num_instead_of_data = 
                             (len(changed_knns))
                         ]
                 if compares_with_first_layer_only == False:
-                        #if yes, changes btw two layers: the former next layer becomes the current layer
+                    # if yes, changes btw two layers: the former next layer becomes the current layer
                     knns_current_layer_point = knns_attribute[layer][1][data_point]
         differences_knns_all_points[
             "point {}".format(data_point)
@@ -116,7 +121,7 @@ def get_distances_of_knns(data, knns_distances, num_instead_of_data):
     return distances_knns_all
 
 
-def get_mean_distances_of_knns(distances_knns_all:dict, knns_distances):
+def get_mean_distances_of_knns(distances_knns_all: dict, knns_distances):
     """
     Get the mean distance of knns for one layer.
 
@@ -131,6 +136,7 @@ def get_mean_distances_of_knns(distances_knns_all:dict, knns_distances):
         )
     return mean_distances_knns_layers
 
+
 def get_sum_similarities_of_knns(similarities_knns_all, knns_similarities):
     sum_similarity_knns_layers = []
     for layer in range(1, len(knns_similarities)):
@@ -139,8 +145,14 @@ def get_sum_similarities_of_knns(similarities_knns_all, knns_similarities):
         )
     return sum_similarity_knns_layers
 
-def get_similarities_knns_btw_layers(data, knns_attribute, num_instead_of_data = False, compares_with_first_layer_only = False):
-    #TODO change names
+
+def get_similarities_knns_btw_layers(
+    data,
+    knns_attribute,
+    num_instead_of_data=False,
+    compares_with_first_layer_only=False,
+):
+    # TODO change names
     """
     Looks at an attribute of the k nearest neighbors of data for each layer (DkNN) and outputs the changes of the knns between the layers.
 
@@ -151,7 +163,7 @@ def get_similarities_knns_btw_layers(data, knns_attribute, num_instead_of_data =
                                        otherwise only whether they stay the same as in the last layer (e.g. layer 0 [1], layer 1 [2], layer 2 [2] --> one similarity)
     :return: changed_knns_all_points (e.g. point 2: {layer 1: [11][12]}) , differences_knns_all_points (e.g. point 2: {layer 1: 2}), differences_knns_sum (e.g. layer 2: [2,3,1])
     """
-    #TODO add description num instead of data
+    # TODO add description num instead of data
     similarities_knns_point = {}
     similar_knns_point = {}
     similarities_knns_all_points = {}
@@ -172,17 +184,23 @@ def get_similarities_knns_btw_layers(data, knns_attribute, num_instead_of_data =
                 if Counter(knns_current_layer_point) == Counter(knns_next_layer_point):
                     # save amount of similarities for all points
                     if "layer {}".format(layer) in similarities_knns_total:
-                        similarities_knns_total["layer {}".format(layer)].append(len(knns_current_layer_point))
+                        similarities_knns_total["layer {}".format(layer)].append(
+                            len(knns_current_layer_point)
+                        )
                     else:
-                        similarities_knns_total["layer {}".format(layer)] = [len(knns_current_layer_point)]
+                        similarities_knns_total["layer {}".format(layer)] = [
+                            len(knns_current_layer_point)
+                        ]
                 else:
                     # save which knns stay similar in current and next layer
                     similar_knns = list(
                         set(knns_current_layer_point) & set(knns_next_layer_point)
                     )
-                    #get the amount of knns that stay similar for one point
-                    similarities_knns_point["layer {}".format(layer)] = (len(similar_knns))
-                    #get the amount of knns that stay similar and the knn indexes themselves for one point
+                    # get the amount of knns that stay similar for one point
+                    similarities_knns_point["layer {}".format(layer)] = len(
+                        similar_knns
+                    )
+                    # get the amount of knns that stay similar and the knn indexes themselves for one point
                     similar_knns_point["layer {}".format(layer)] = (
                         similar_knns,
                         (
@@ -203,11 +221,15 @@ def get_similarities_knns_btw_layers(data, knns_attribute, num_instead_of_data =
                             (len(similar_knns))
                         ]
                 if compares_with_first_layer_only == False:
-                        #if yes, changes btw two layers: the former next layer becomes the current layer
+                    # if yes, changes btw two layers: the former next layer becomes the current layer
                     knns_current_layer_point = knns_attribute[layer][1][data_point]
 
         similarities_knns_all_points[
             "point {}".format(data_point)
         ] = similarities_knns_point
         similar_knns_all_points["point {}".format(data_point)] = similar_knns_point
-    return similar_knns_all_points, similarities_knns_all_points, similarities_knns_total
+    return (
+        similar_knns_all_points,
+        similarities_knns_all_points,
+        similarities_knns_total,
+    )

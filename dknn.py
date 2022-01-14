@@ -102,7 +102,9 @@ class NearestNeighbor:
 
         self._faiss_index = faiss.IndexFlatL2(dimension)
 
-    def _find_knns_falconn(self, data_activations_layer, output, train_activations_lsh_layer):
+    def _find_knns_falconn(
+        self, data_activations_layer, output, train_activations_lsh_layer
+    ):
         """
         Finds the k nearest neighbors with the falconn library.
 
@@ -129,9 +131,11 @@ class NearestNeighbor:
                 missing_indices[i, len(query_res) :] = True
 
                 output[i, : len(query_res)] = query_res
-            #get euclidean distances of activations of nn to activation of point
-            distances = euclidean_distances(data_activations_layer[i].reshape(1, -1),
-                                            train_activations_lsh_layer[query_res])
+            # get euclidean distances of activations of nn to activation of point
+            distances = euclidean_distances(
+                data_activations_layer[i].reshape(1, -1),
+                train_activations_lsh_layer[query_res],
+            )
             neighbor_distance.append(distances[0])
 
         return missing_indices, neighbor_distance
@@ -176,7 +180,7 @@ class NearestNeighbor:
         else:
             raise NotImplementedError
 
-    def find_knns(self, data_activations_layer, output,train_activations_lsh_layer):
+    def find_knns(self, data_activations_layer, output, train_activations_lsh_layer):
         """
         Finds the k nearest neighbors.
 
@@ -184,9 +188,13 @@ class NearestNeighbor:
         :param output: output of layer.
         """
         if self._BACKEND is NearestNeighbor.BACKEND.FALCONN:
-            return self._find_knns_falconn(data_activations_layer, output, train_activations_lsh_layer)
+            return self._find_knns_falconn(
+                data_activations_layer, output, train_activations_lsh_layer
+            )
         elif self._BACKEND is NearestNeighbor.BACKEND.FAISS:
-            return self._find_knns_faiss(data_activations_layer, output, train_activations_lsh_layer)
+            return self._find_knns_faiss(
+                data_activations_layer, output, train_activations_lsh_layer
+            )
         else:
             raise NotImplementedError
 
@@ -264,8 +272,8 @@ class DkNNModel(Model):
             self.train_activations_lsh[layer] -= center
             self.centers[layer] = center
 
-            #print("Constructing the NearestNeighbor table")
-            #print("dimension for tables is ", self.train_activations_lsh[layer].shape[1])
+            # print("Constructing the NearestNeighbor table")
+            # print("dimension for tables is ", self.train_activations_lsh[layer].shape[1])
             self.query_objects[layer] = NearestNeighbor(
                 backend=self.back_end,
                 dimension=self.train_activations_lsh[layer].shape[1],
@@ -311,7 +319,8 @@ class DkNNModel(Model):
                 # FALCONN does not return distance
                 knn_missing_indices, knn_distance = self.query_objects[layer].find_knns(
                     data_activations_layer,
-                    knns_ind[layer], self.train_activations_lsh[layer]
+                    knns_ind[layer],
+                    self.train_activations_lsh[layer],
                 )
                 knns_distances[layer] = knn_distance
 
@@ -322,7 +331,8 @@ class DkNNModel(Model):
                     layer
                 ].find_knns(
                     data_activations_layer,
-                    knns_ind[layer], self.train_activations_lsh[layer]
+                    knns_ind[layer],
+                    self.train_activations_lsh[layer],
                 )
                 knns_distances[layer] = knn_distance
 
@@ -414,8 +424,8 @@ class DkNNModel(Model):
             data_activations = self.get_activations(data_np)
 
             knns_ind, knns_labels, knns_distances = self.find_train_knns(
-                    data_activations
-                )
+                data_activations
+            )
 
             knns_not_in_class = self.nonconformity(knns_labels)
             _, _, creds = self.preds_conf_cred(knns_not_in_class)
@@ -451,9 +461,7 @@ class DkNNModel(Model):
         self.cali_labels = cali_labels
 
         print("Starting calibration of DkNN.")
-        cali_knns_ind, cali_knns_labels, _ = self.find_train_knns(
-                self.cali_activations
-            )
+        cali_knns_ind, cali_knns_labels, _ = self.find_train_knns(self.cali_activations)
         assert all(
             [v.shape == (self.nb_cali, self.neighbors) for v in cali_knns_ind.values()]
         )
@@ -467,13 +475,13 @@ class DkNNModel(Model):
         cali_knns_not_in_class = self.nonconformity(cali_knns_labels)
         cali_knns_not_in_l = np.zeros(self.nb_cali, dtype=np.int32)
         for i in range(self.nb_cali):
-            #TODO which knns are not in same class as calibration point, per layer/ or better label?
+            # TODO which knns are not in same class as calibration point, per layer/ or better label?
             cali_knns_not_in_l[i] = cali_knns_not_in_class[i, cali_labels[i]]
         cali_knns_not_in_l_sorted = np.sort(cali_knns_not_in_l)
-        #TODO throws error, when cali_knns_not_in_l_sorted are all zero --> cali_nonconformity [] --> nb_cali = 0
+        # TODO throws error, when cali_knns_not_in_l_sorted are all zero --> cali_nonconformity [] --> nb_cali = 0
         self.cali_nonconformity = np.trim_zeros(cali_knns_not_in_l_sorted, trim="f")
-        #TODO: correct to build it in here? If all neighbors have same label as point, nb_cali shape should be 1 instead of 0?
-        #TODO why change it anyways? Says that neighbors are not the same, amount of neighbors that are different, why is that important for amount of cali points?
-        #self.nb_cali = self.cali_nonconformity.shape[0]
+        # TODO: correct to build it in here? If all neighbors have same label as point, nb_cali shape should be 1 instead of 0?
+        # TODO why change it anyways? Says that neighbors are not the same, amount of neighbors that are different, why is that important for amount of cali points?
+        # self.nb_cali = self.cali_nonconformity.shape[0]
         self.calibrated = True
         print("DkNN calibration complete.")

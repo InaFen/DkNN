@@ -2,7 +2,9 @@ import numpy as np
 from foolbox.distances import LpDistance
 
 
-def generate_neighboring_points(data_sample, amount, epsilon=None, noise_vectors=None, scale=0.1):
+def generate_neighboring_points(
+    data_sample, amount, epsilon=None, noise_vectors=None, scale=0.1
+):
     """
     This function is given a data point data_sample and it generates amount many data points in an epsilon neighborhood
     scale is given to the noise function to sample the random noise
@@ -20,7 +22,9 @@ def generate_neighboring_points(data_sample, amount, epsilon=None, noise_vectors
     data_sample = np.expand_dims(data_sample, 0)  # reshape for broadcast operations
 
     # generate noisy samples
-    if noise_vectors is not None:  # in case we do need deterministic neighbors they have to be passed
+    if (
+        noise_vectors is not None
+    ):  # in case we do need deterministic neighbors they have to be passed
         noises = noise_vectors
     else:
         noises = np.random.normal(loc=0, scale=scale, size=shape)
@@ -32,17 +36,24 @@ def generate_neighboring_points(data_sample, amount, epsilon=None, noise_vectors
     # and make sure that perturbation does not exceed epsilon
     # the clip function cannot deal with np broadcasts
     if epsilon is not None:
-        repeated_data = np.repeat(data_sample, amount, axis=0)  # therefore, repeat sample
+        repeated_data = np.repeat(
+            data_sample, amount, axis=0
+        )  # therefore, repeat sample
 
         # the following line is for debugging purpose only:
         a = l2_dist(repeated_data, perturbed_samples_clip)
 
-        perturbed_samples_clip = l2_dist.clip_perturbation(repeated_data, perturbed_samples_clip, epsilon)
+        perturbed_samples_clip = l2_dist.clip_perturbation(
+            repeated_data, perturbed_samples_clip, epsilon
+        )
 
         b = l2_dist(repeated_data, perturbed_samples_clip)
-        c = np.isclose(b, epsilon)  # it's floats so check for every element if roughly the same as epsilon
+        c = np.isclose(
+            b, epsilon
+        )  # it's floats so check for every element if roughly the same as epsilon
         # if one is not true, the neighbors might be at the wrong distance
-        assert np.all(c), \
-            "Your perturbed samples do not seem to have the distance to the original ones that you specified with epsilon. " \
+        assert np.all(c), (
+            "Your perturbed samples do not seem to have the distance to the original ones that you specified with epsilon. "
             "This might be the case if scale is small and epsilon large"
+        )
     return perturbed_samples_clip
