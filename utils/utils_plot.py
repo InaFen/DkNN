@@ -314,9 +314,9 @@ def plot_member_non_member_experiments_histogram(sum_similarities_knns_member_al
     plt.plot()
     #plt.plot(x_non_member, y_non_member_1, linestyle='None')  # '-o' to connect dots if wanted
 
-    plt.xlabel("Sum of similar knns (= nns, that stay knns in all layers) (Sum for all points and for all layers)")
+    plt.xlabel("Sum of consistent knns (= nns, that stay knns in all layers) (sum for all points and for all layers)")
     plt.ylabel("Amount of experiments")
-    plt.suptitle("Distribution of sum of similar knns")
+    plt.suptitle("Distribution of sum of consistent knns")
     plt.title("Model: Lenet-5, Train Acc: {}, Test Acc: {}".format(round(train_accuracy[1], ndigits=4),
                                                                    round(test_accuracy[1], ndigits=4)), fontsize=10)
     plt.legend()

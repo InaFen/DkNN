@@ -4,18 +4,16 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from dknn import *
-from utils import *
-from utils_data import *
-from utils_model import *
-from utils_plot import *
+from utils.utils_data import *
+from utils.utils_model import *
+from utils.utils_plot import *
+from utils.utils import *
 
 
 import os
 import matplotlib
 import numpy as np
 import tensorflow as tf
-
-import faiss
 
 import time
 

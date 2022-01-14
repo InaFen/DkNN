@@ -129,7 +129,6 @@ class NearestNeighbor:
                 missing_indices[i, len(query_res) :] = True
 
                 output[i, : len(query_res)] = query_res
-            #TODO correct reshape? correct distance calculation?
             #get euclidean distances of activations of nn to activation of point
             distances = euclidean_distances(data_activations_layer[i].reshape(1, -1),
                                             train_activations_lsh_layer[query_res])
@@ -386,7 +385,6 @@ class DkNNModel(Model):
         for i in range(nb_data):
             # p-value of test input for each class
             p_value = np.zeros(self.nb_classes, dtype=np.float32)
-
             for class_id in range(self.nb_classes):
                 # p-value of (test point, candidate label)
                 p_value[class_id] = (
@@ -395,7 +393,6 @@ class DkNNModel(Model):
                         self.cali_nonconformity, knns_not_in_class[i, class_id]
                     )
                 ) / float(self.nb_cali)
-
             preds_knn[i] = np.argmax(p_value)
             confs[i, preds_knn[i]] = 1.0 - np.sort(p_value)[-2]
             creds[i, preds_knn[i]] = p_value[preds_knn[i]]
@@ -470,9 +467,13 @@ class DkNNModel(Model):
         cali_knns_not_in_class = self.nonconformity(cali_knns_labels)
         cali_knns_not_in_l = np.zeros(self.nb_cali, dtype=np.int32)
         for i in range(self.nb_cali):
+            #TODO which knns are not in same class as calibration point, per layer/ or better label?
             cali_knns_not_in_l[i] = cali_knns_not_in_class[i, cali_labels[i]]
         cali_knns_not_in_l_sorted = np.sort(cali_knns_not_in_l)
+        #TODO throws error, when cali_knns_not_in_l_sorted are all zero --> cali_nonconformity [] --> nb_cali = 0
         self.cali_nonconformity = np.trim_zeros(cali_knns_not_in_l_sorted, trim="f")
-        self.nb_cali = self.cali_nonconformity.shape[0]
+        #TODO: correct to build it in here? If all neighbors have same label as point, nb_cali shape should be 1 instead of 0?
+        #TODO why change it anyways? Says that neighbors are not the same, amount of neighbors that are different, why is that important for amount of cali points?
+        #self.nb_cali = self.cali_nonconformity.shape[0]
         self.calibrated = True
         print("DkNN calibration complete.")
