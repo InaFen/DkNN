@@ -27,13 +27,13 @@ K_NEIGHBORS = [5, 10, 50, 100]  # for DkNN
 AMOUNT_GENERATE_NEIGHBORS = [50, 100, 200]  # for generate_neighboring_points
 SCALES = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2]  # for generate_neighboring_points
 # how many of member/non member elements are used
-AMOUNT_M_NM_TOTAL = 1000
+AMOUNT_M_NM_TOTAL = 2 #1000
 
 # parameters for testing
 amount_points = 30000
 backend = (
     NearestNeighbor.BACKEND.FAISS
-)  # TODO FALCONN does not work for small amount of data, most likely because data is in different buckets (LSH) --> if wanted, an alternative has to be implemented
+)
 path_model = "/home/inafen/jupyter_notebooks/model_lnet5_2"
 
 hyperparamters = np.array((SCALES, K_NEIGHBORS, AMOUNT_GENERATE_NEIGHBORS))
@@ -256,7 +256,7 @@ for scale_ind in range(len(SCALES)):
 all_data_one_experiment_for_pickle = []
 experiment_data_for_pickle = []
 counter = 0
-for scale, k_neighbors, amount_generate_neighbors in HYPERPARAMETERS:
+for scale, k_neighbors, amount_generate_neighbors in HYPERPARAMETERS[:1]:
     print("experiment number: {}".format(counter))
     counter += 1
     # get index of scale
@@ -298,16 +298,7 @@ for scale, k_neighbors, amount_generate_neighbors in HYPERPARAMETERS:
             back_end=backend,
         )
 
-        cal_data_temp = calibration_data_per_scale_member[scale_index][element][
-            :amount_calibration
-        ]
-        cal_label_temp = calibration_label_per_scale_member[scale_index][element]
-        cal_label_temp_shape = cal_label_temp.shape[0]
-        cal_label_temp_shape = cal_label_temp.shape[0]
-
         # calibrate models
-        # dknn_member.calibrate(generated_neighbors_per_scale_member[scale_index][element][:amount_calibration],
-        #                      label_generated_neighbors_per_scale_member[scale_index][element][:amount_calibration])
         dknn_member.calibrate(
             calibration_data_per_scale_member[scale_index][element],
             calibration_label_per_scale_member[scale_index][element],
@@ -347,7 +338,7 @@ for scale, k_neighbors, amount_generate_neighbors in HYPERPARAMETERS:
 
     experiment_data_for_pickle.append(all_data_one_experiment_for_pickle)
     all_data_one_experiment_for_pickle = []
-    with open("/home/inafen/jupyter_notebooks/data_neighbors_test6.pickle", "wb") as f:
+    with open("/home/inafen/jupyter_notebooks/data_neighbors_test7.pickle", "wb") as f:
         pickle.dump(experiment_data_for_pickle, f)
 
 
