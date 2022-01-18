@@ -253,19 +253,18 @@ for scale_ind in range(len(SCALES)):
             (max_amount_generate_neighbors), non_member_labels[element]
         )
 
-all_data_one_experiment_for_pickle = []
-experiment_data_for_pickle = []
-counter = 0
-for scale, k_neighbors, amount_generate_neighbors in HYPERPARAMETERS[:1]:
-    print("experiment number: {}".format(counter))
-    counter += 1
+all_data_one_experiment_for_pickle = {}
+experiment_data_for_pickle = {}
+counter_experiments = 0
+for scale, k_neighbors, amount_generate_neighbors in HYPERPARAMETERS:
+    print("experiment number: {}".format(counter_experiments))
     # get index of scale
     for i in range(len(SCALES)):
         if scale == SCALES[i]:
             scale_index = i
             break
     for element in range(AMOUNT_M_NM_TOTAL):
-        print("experiment number: {}".format(counter))
+        print("experiment number: {}".format(counter_experiments))
         print("element number: {}".format(element))
 
         # Wrap the model into a DkNNModel
@@ -321,23 +320,23 @@ for scale, k_neighbors, amount_generate_neighbors in HYPERPARAMETERS[:1]:
             non_member_data[element], get_knns=True
         )
 
-        current_data_for_pickle = []
-        current_data_for_pickle.append(train_accuracy)
-        current_data_for_pickle.append(test_accuracy)
-        current_data_for_pickle.append(knns_ind_member)
-        current_data_for_pickle.append(knns_ind_non_member)
-        current_data_for_pickle.append(knns_distances_member)
-        current_data_for_pickle.append(knns_distances_non_member)
-        current_data_for_pickle.append(scale)
-        current_data_for_pickle.append(k_neighbors)
-        current_data_for_pickle.append(amount_generate_neighbors)
-        current_data_for_pickle.append(HYPERPARAMETERS)
-        current_data_for_pickle.append(AMOUNT_M_NM_TOTAL)
+        current_data_for_pickle = {}
+        current_data_for_pickle["train_accuracy"] = train_accuracy
+        current_data_for_pickle["test_accuracy"] = test_accuracy
+        current_data_for_pickle["knns_ind_member"] = knns_ind_member
+        current_data_for_pickle["knns_ind_non_member"] = knns_ind_non_member
+        current_data_for_pickle["knns_distances_member"] = knns_distances_member
+        current_data_for_pickle["knns_distances_non_member"] = knns_distances_non_member
+        current_data_for_pickle["scale"] = scale
+        current_data_for_pickle["k_neighbors"] = k_neighbors
+        current_data_for_pickle["amount_generate_neighbors"] = amount_generate_neighbors
+        current_data_for_pickle["HYPERPARAMETERS"] = HYPERPARAMETERS
+        current_data_for_pickle["AMOUNT_M_NM_TOTAL"] = AMOUNT_M_NM_TOTAL
+        all_data_one_experiment_for_pickle["element {}".format(element)] = current_data_for_pickle
 
-        all_data_one_experiment_for_pickle.append(current_data_for_pickle)
-
-    experiment_data_for_pickle.append(all_data_one_experiment_for_pickle)
-    all_data_one_experiment_for_pickle = []
+    experiment_data_for_pickle["experiment {}".format(counter_experiments)] = all_data_one_experiment_for_pickle
+    all_data_one_experiment_for_pickle = {}
+    counter_experiments += 1
     with open("/home/inafen/jupyter_notebooks/data_neighbors_test7.pickle", "wb") as f:
         pickle.dump(experiment_data_for_pickle, f)
 

@@ -7,7 +7,7 @@ from utils.utils_plot import (
 )
 
 # open pickle
-with open("/home/inafen/jupyter_notebooks/data_neighbors_test5.pickle", "rb") as f:
+with open("/home/inafen/jupyter_notebooks/data_neighbors_test7.pickle", "rb") as f:
     loaded_obj = pickle.load(f)
 
 train_accuracy = []
@@ -26,20 +26,21 @@ knns_distances_member_points = []
 knns_distances_non_member_points = []
 
 # get data from pickle
-amount_m_nm_total = loaded_obj[0][0][10]
+amount_m_nm_total = loaded_obj["experiment 0"]["element 0"]["AMOUNT_M_NM_TOTAL"]
+print(amount_m_nm_total)
 for experiment in range(len(loaded_obj)):
-    for point in range(amount_m_nm_total):
+    for element in range(amount_m_nm_total):
         knns_ind_member_current = []
         knns_ind_non_member_current = []
         knns_distances_member_current = []
         knns_distances_non_member_current = []
         # append values for current point
         knns_ind_member_current.append(
-            loaded_obj[experiment][point][2]
+            loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["knns_ind_member"]
         )  # original member data point always as first point
-        knns_ind_non_member_current.append(loaded_obj[experiment][point][3])
-        knns_distances_member_current.append(loaded_obj[experiment][point][4])
-        knns_distances_non_member_current.append(loaded_obj[experiment][point][5])
+        knns_ind_non_member_current.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["knns_ind_non_member"])
+        knns_distances_member_current.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["knns_distances_member"])
+        knns_distances_non_member_current.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["knns_distances_non_member"])
         # append current point values to list of all points in this experiment
         knns_ind_member_points.append(knns_ind_member_current)
         knns_ind_non_member_points.append(knns_ind_non_member_current)
@@ -56,14 +57,14 @@ for experiment in range(len(loaded_obj)):
     knns_distances_member_points = []
     knns_distances_non_member_points = []
 
-    train_accuracy.append(loaded_obj[experiment][point][0][1])
-    test_accuracy.append(loaded_obj[experiment][point][1][1])
-    scale.append(loaded_obj[experiment][point][6])
-    k_neighbors.append(loaded_obj[experiment][point][7])
-    amount_generate_neighbors.append(loaded_obj[experiment][point][8])
+    train_accuracy.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["train_accuracy"][1])
+    test_accuracy.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["test_accuracy"][1])
+    scale.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["scale"])
+    k_neighbors.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["k_neighbors"])
+    amount_generate_neighbors.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["amount_generate_neighbors"])
 
-for i in range(len(loaded_obj[0][0][9])):
-    experiment_setups.append("Experiment {}: {}".format(i, (loaded_obj[0][0][9][i])))
+for i in range(len(loaded_obj["experiment 0"]["element 0"]["HYPERPARAMETERS"])):
+    experiment_setups.append("Experiment {}: {}".format(i, (loaded_obj["experiment 0"]["element 0"]["HYPERPARAMETERS"][i])))
 
 mean_knns_layers_member_all_experiments = []
 mean_knns_layers_non_member_all_experiments = []
@@ -81,6 +82,7 @@ for experiment in range(len(experiment_setups)):  # for all experiments
         knns_indices_list_non_member = []
         # make dicts to lists for get_differences_knns_btw_layers and to compare distances
         knns_indices_list_member = list(knns_ind_member[experiment][point][0].items())
+        print(knns_indices_list_member)
         knns_indices_list_non_member = list(
             knns_ind_non_member[experiment][point][0].items()
         )
@@ -346,8 +348,8 @@ plot_member_non_member_layer_experiments_scatter(
     "/home/inafen/jupyter_notebooks/similarities_knns_0.png",
     train_accuracy,
     test_accuracy,
-    ylabel="Sum of similar knns",
-    suptitle="Sum of similar knns (= nns, that stay knns) btw. layer {} & {}",
+    ylabel="Sum of consistent knns",
+    suptitle="Sum of consistent knns (= nns, that stay knns) btw. layer {} & {}",
 )
 plot_member_non_member_layer_experiments_scatter(
     sum_similarities_knns_layers_member_all_experiments,
@@ -357,8 +359,8 @@ plot_member_non_member_layer_experiments_scatter(
     "/home/inafen/jupyter_notebooks/similarities_knns_1.png",
     train_accuracy,
     test_accuracy,
-    ylabel="Sum of similar knns",
-    suptitle="Sum of similar knns (= nns, that stay knns) btw. layer {} & {}",
+    ylabel="Sum of consistent knns",
+    suptitle="Sum of consistent knns (= nns, that stay knns) btw. layer {} & {}",
 )
 plot_member_non_member_layer_experiments_scatter(
     sum_similarities_knns_layers_member_all_experiments,
@@ -368,8 +370,8 @@ plot_member_non_member_layer_experiments_scatter(
     "/home/inafen/jupyter_notebooks/similarities_knns_2.png",
     train_accuracy,
     test_accuracy,
-    ylabel="Sum of similar knns",
-    suptitle="Sum of similar knns (= nns, that stay knns) btw. layer {} & {}",
+    ylabel="Sum of consistent knns",
+    suptitle="Sum of consistent knns (= nns, that stay knns) btw. layer {} & {}",
 )
 plot_member_non_member_layer_experiments_scatter(
     sum_similarities_knns_layers_member_all_experiments,
@@ -379,8 +381,8 @@ plot_member_non_member_layer_experiments_scatter(
     "/home/inafen/jupyter_notebooks/similarities_knns_3.png",
     train_accuracy,
     test_accuracy,
-    ylabel="Sum of similar knns",
-    suptitle="Sum of similar knns (= nns, that stay knns) btw. layer {} & {}",
+    ylabel="Sum of consistent knns",
+    suptitle="Sum of consistent knns (= nns, that stay knns) btw. layer {} & {}",
 )
 
 plot_member_non_member_experiments_histogram(
