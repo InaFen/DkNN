@@ -27,13 +27,11 @@ K_NEIGHBORS = [5, 10, 50, 100]  # for DkNN
 AMOUNT_GENERATE_NEIGHBORS = [50, 100, 200]  # for generate_neighboring_points
 SCALES = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2]  # for generate_neighboring_points
 # how many of member/non member elements are used
-AMOUNT_M_NM_TOTAL = 2 #1000
+AMOUNT_M_NM_TOTAL = 2  # 1000
 
 # parameters for testing
 amount_points = 30000
-backend = (
-    NearestNeighbor.BACKEND.FAISS
-)
+backend = NearestNeighbor.BACKEND.FAISS
 path_model = "/home/inafen/jupyter_notebooks/model_lnet5_2"
 
 hyperparamters = np.array((SCALES, K_NEIGHBORS, AMOUNT_GENERATE_NEIGHBORS))
@@ -332,9 +330,13 @@ for scale, k_neighbors, amount_generate_neighbors in HYPERPARAMETERS:
         current_data_for_pickle["amount_generate_neighbors"] = amount_generate_neighbors
         current_data_for_pickle["HYPERPARAMETERS"] = HYPERPARAMETERS
         current_data_for_pickle["AMOUNT_M_NM_TOTAL"] = AMOUNT_M_NM_TOTAL
-        all_data_one_experiment_for_pickle["element {}".format(element)] = current_data_for_pickle
+        all_data_one_experiment_for_pickle[
+            "element {}".format(element)
+        ] = current_data_for_pickle
 
-    experiment_data_for_pickle["experiment {}".format(counter_experiments)] = all_data_one_experiment_for_pickle
+    experiment_data_for_pickle[
+        "experiment {}".format(counter_experiments)
+    ] = all_data_one_experiment_for_pickle
     all_data_one_experiment_for_pickle = {}
     counter_experiments += 1
     with open("/home/inafen/jupyter_notebooks/data_neighbors_test7.pickle", "wb") as f:

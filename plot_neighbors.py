@@ -36,11 +36,25 @@ for experiment in range(len(loaded_obj)):
         knns_distances_non_member_current = []
         # append values for current point
         knns_ind_member_current.append(
-            loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["knns_ind_member"]
+            loaded_obj["experiment {}".format(experiment)][
+                "element {}".format(element)
+            ]["knns_ind_member"]
         )  # original member data point always as first point
-        knns_ind_non_member_current.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["knns_ind_non_member"])
-        knns_distances_member_current.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["knns_distances_member"])
-        knns_distances_non_member_current.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["knns_distances_non_member"])
+        knns_ind_non_member_current.append(
+            loaded_obj["experiment {}".format(experiment)][
+                "element {}".format(element)
+            ]["knns_ind_non_member"]
+        )
+        knns_distances_member_current.append(
+            loaded_obj["experiment {}".format(experiment)][
+                "element {}".format(element)
+            ]["knns_distances_member"]
+        )
+        knns_distances_non_member_current.append(
+            loaded_obj["experiment {}".format(experiment)][
+                "element {}".format(element)
+            ]["knns_distances_non_member"]
+        )
         # append current point values to list of all points in this experiment
         knns_ind_member_points.append(knns_ind_member_current)
         knns_ind_non_member_points.append(knns_ind_non_member_current)
@@ -57,14 +71,38 @@ for experiment in range(len(loaded_obj)):
     knns_distances_member_points = []
     knns_distances_non_member_points = []
 
-    train_accuracy.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["train_accuracy"][1])
-    test_accuracy.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["test_accuracy"][1])
-    scale.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["scale"])
-    k_neighbors.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["k_neighbors"])
-    amount_generate_neighbors.append(loaded_obj["experiment {}".format(experiment)]["element {}".format(element)]["amount_generate_neighbors"])
+    train_accuracy.append(
+        loaded_obj["experiment {}".format(experiment)]["element {}".format(element)][
+            "train_accuracy"
+        ][1]
+    )
+    test_accuracy.append(
+        loaded_obj["experiment {}".format(experiment)]["element {}".format(element)][
+            "test_accuracy"
+        ][1]
+    )
+    scale.append(
+        loaded_obj["experiment {}".format(experiment)]["element {}".format(element)][
+            "scale"
+        ]
+    )
+    k_neighbors.append(
+        loaded_obj["experiment {}".format(experiment)]["element {}".format(element)][
+            "k_neighbors"
+        ]
+    )
+    amount_generate_neighbors.append(
+        loaded_obj["experiment {}".format(experiment)]["element {}".format(element)][
+            "amount_generate_neighbors"
+        ]
+    )
 
 for i in range(len(loaded_obj["experiment 0"]["element 0"]["HYPERPARAMETERS"])):
-    experiment_setups.append("Experiment {}: {}".format(i, (loaded_obj["experiment 0"]["element 0"]["HYPERPARAMETERS"][i])))
+    experiment_setups.append(
+        "Experiment {}: {}".format(
+            i, (loaded_obj["experiment 0"]["element 0"]["HYPERPARAMETERS"][i])
+        )
+    )
 
 mean_knns_layers_member_all_experiments = []
 mean_knns_layers_non_member_all_experiments = []
