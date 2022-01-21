@@ -129,7 +129,6 @@ for layer in loaded_obj["element 6"]["knns_ind"]:  # for each layer
     data_knns.append(data_knns_layer)
 for layer in range(len(data_knns)):
     print("Knns for layer {}".format(layer))
-    print("Model ")  # TODO
     plot_images(
         images=data_knns[layer],
         amount_subplots=loaded_obj["element 6"]["k_neighbors"],
