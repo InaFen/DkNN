@@ -449,3 +449,22 @@ def plot_member_non_member_experiments_histogram(
     plt.savefig(filepath, bbox_inches="tight")
     plt.show()
     plt.clf()
+
+def plot_images(images: np.array, amount_subplots: int, filepath: str):
+    """
+    Plot images in subplots, e.g. MNIST data points, and save them
+
+    :param images: Images that should be plotted
+    :param amount_subplots: How many images should be plotted
+    :param filepath: Where the plot should be saved
+    """
+    _, axs = plt.subplots(1, amount_subplots, figsize=(8, 8))
+    if amount_subplots != 1:
+        axs = axs.flatten()
+        for image, ax in zip(images, axs):
+            ax.imshow(image.squeeze(), cmap='gray')
+    else:
+        axs.imshow(images.squeeze(), cmap='gray')
+    plt.show()
+    plt.savefig(filepath, bbox_inches="tight")
+    plt.clf()
