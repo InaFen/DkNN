@@ -145,15 +145,16 @@ def get_sum_similarities_of_knns(
     """
     Get the sum of similar knns btw. two layers, for all layers.
 
-    :param similarities_knns_all: similar knns as dict with layers as keys #TODO
-    :param knns_similarities:
-    :return:
+    :param similarities_knns_all: similar knns for all points as dict with layers as keys, e.g. {layer 1: [10, 11, 8, 7,...],..}
+    :param knns_similarities: similarities of knns as a list, is only used to iterate through all layers
+    :return: sum_similarity_knns_layers (sum of all similar knns for all points per btw. two layers (so list with 4 elements), e.g.[2386, 1215, 1003, 852])
     """
     sum_similarity_knns_layers = []
     for layer in range(1, len(knns_similarities)):
         sum_similarity_knns_layers.append(
             np.sum(similarities_knns_all.get("layer {}".format(layer)))
         )
+    print(sum_similarity_knns_layers)
     return sum_similarity_knns_layers
 
 
