@@ -154,7 +154,6 @@ def get_sum_similarities_of_knns(
         sum_similarity_knns_layers.append(
             np.sum(similarities_knns_all.get("layer {}".format(layer)))
         )
-    print(sum_similarity_knns_layers)
     return sum_similarity_knns_layers
 
 
