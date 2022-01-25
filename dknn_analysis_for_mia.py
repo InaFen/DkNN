@@ -167,13 +167,13 @@ knns_distances_list_noisy = list(knns_distances_noisy.items())
 # analyse changes knns
 # get how many changes in knns have happened between two layers
 _, _, differences_knns_total_training = get_differences_knns_btw_layers(
-    train_data[:amount_data], knns_indices_list_train
+    len(train_data[:amount_data]), knns_indices_list_train
 )
 _, _, differences_knns_total_test = get_differences_knns_btw_layers(
-    test_data[:amount_data], knns_indices_list_test
+    len(test_data[:amount_data]), knns_indices_list_test
 )
 _, _, differences_knns_total_noisy = get_differences_knns_btw_layers(
-    noisy_data[:amount_data], knns_indices_list_noisy
+    len(noisy_data[:amount_data]), knns_indices_list_noisy
 )
 # get mean of knns changes btw. two layers
 mean_knns_layers_train = get_mean_knns_layer(
@@ -200,13 +200,13 @@ plot_changes_knns_3(
 # analyse changes labels
 # get how many changes in labels of knns have happened between two layers
 _, _, differences_labels_total_training = get_differences_knns_btw_layers(
-    train_data[:amount_data], knns_labels_list_train
+    len(train_data[:amount_data]), knns_labels_list_train
 )
 _, _, differences_labels_total_test = get_differences_knns_btw_layers(
-    test_data[:amount_data], knns_labels_list_test
+    len(test_data[:amount_data]), knns_labels_list_test
 )
 _, _, differences_labels_total_noisy = get_differences_knns_btw_layers(
-    noisy_data[:amount_data], knns_labels_list_noisy
+    len(noisy_data[:amount_data]), knns_labels_list_noisy
 )
 # get mean of label of knns changes btw. two layers
 mean_labels_layers_train = get_mean_knns_layer(
@@ -233,13 +233,13 @@ plot_changes_knns_3(
 # analyse distances of knns
 # get the distances to data point of knns, euclidean distance
 distances_knns_all_test = get_distances_of_knns(
-    test_data[:amount_data], knns_distances_list_test
+    len(test_data[:amount_data]), knns_distances_list_test
 )
 distances_knns_all_train = get_distances_of_knns(
-    train_data[:amount_data], knns_distances_list_train
+    len(train_data[:amount_data]), knns_distances_list_train
 )
 distances_knns_all_noisy = get_distances_of_knns(
-    noisy_data[:amount_data], knns_distances_list_noisy
+    len(noisy_data[:amount_data]), knns_distances_list_noisy
 )
 # get mean distance per layer
 mean_distances_test = get_mean_distances_of_knns(

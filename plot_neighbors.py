@@ -7,7 +7,7 @@ from utils.utils_plot import (
 )
 
 # open pickle
-with open("/home/inafen/jupyter_notebooks/data_neighbors_test7.pickle", "rb") as f:
+with open("/home/inafen/jupyter_notebooks/data_neighbors_changed_non_member.pickle", "rb") as f:
     loaded_obj = pickle.load(f)
 
 train_accuracy = []
@@ -120,7 +120,6 @@ for experiment in range(len(experiment_setups)):  # for all experiments
         knns_indices_list_non_member = []
         # make dicts to lists for get_differences_knns_btw_layers and to compare distances
         knns_indices_list_member = list(knns_ind_member[experiment][point][0].items())
-        print(knns_indices_list_member)
         knns_indices_list_non_member = list(
             knns_ind_non_member[experiment][point][0].items()
         )
@@ -135,33 +134,29 @@ for experiment in range(len(experiment_setups)):  # for all experiments
         _, _, differences_knns_total_member = get_differences_knns_btw_layers(
             1,
             knns_indices_list_member,
-            num_instead_of_data=True,
             compares_with_first_layer_only=False,
         )  # 1 because in each fprop of DkNN 1 input point != amount_m_nm_total (for how many this is repeated)
         _, _, differences_knns_total_non_member = get_differences_knns_btw_layers(
             1,
             knns_indices_list_non_member,
-            num_instead_of_data=True,
             compares_with_first_layer_only=False,
         )  # 1 because in each fprop of DkNN 1 input point != amount_m_nm_total (for how many this is repeated)
+        #similarities_knns_total_member e.g. {layer 1: [100], layer 2: [100],...}
         _, _, similarities_knns_total_member = get_similarities_knns_btw_layers(
             1,
             knns_indices_list_member,
-            num_instead_of_data=True,
             compares_with_first_layer_only=True,
         )
         _, _, similarities_knns_total_non_member = get_similarities_knns_btw_layers(
             1,
             knns_indices_list_non_member,
-            num_instead_of_data=True,
             compares_with_first_layer_only=True,
         )
-
         distances_knns_all_member = get_distances_of_knns(
-            1, knns_distances_list_member, num_instead_of_data=True
+            1, knns_distances_list_member
         )
         distances_knns_all_non_member = get_distances_of_knns(
-            1, knns_distances_list_non_member, num_instead_of_data=True
+            1, knns_distances_list_non_member
         )
 
         # put amount of changes (differences_knns_total_member)/ distances knns for all points of one experiments in one dict
@@ -212,6 +207,7 @@ for experiment in range(len(experiment_setups)):  # for all experiments
                     "layer {}".format(layer)
                 ].append(distances_knns_all_non_member["layer {}".format(layer)][0])
     # outputs mean of changes in nn/ distances for one experiment
+    #TODO sometimes [inf, inf,..]?
     mean_knns_layers_member_one_experiment = get_mean_knns_layer(
         knns_indices_list_member, differences_knns_total_member_points_experiment
     )
@@ -227,7 +223,6 @@ for experiment in range(len(experiment_setups)):  # for all experiments
         distances_knns_total_non_member_points_experiment,
         knns_distances_list_non_member,
     )
-
     # get sum of similarities for one experiment for all points (e.g. [1,1,2,1] + [1,1,0,1] --> [2,2,2,2])
     sum_similarities_knns_layers_member_one_experiment = get_sum_similarities_of_knns(
         similarities_knns_total_member_points_experiment, knns_indices_list_member
@@ -238,7 +233,6 @@ for experiment in range(len(experiment_setups)):  # for all experiments
             knns_indices_list_non_member,
         )
     )
-
     # append means for one experiment to all experiments
     mean_knns_layers_member_all_experiments.append(
         mean_knns_layers_member_one_experiment
@@ -260,7 +254,6 @@ for experiment in range(len(experiment_setups)):  # for all experiments
     sum_similarities_knns_layers_non_member_all_experiments.append(
         sum_similarities_knns_layers_non_member_one_experiment
     )
-
 # get the total sum for all layers for one experiment (e.g. [2,2,2,2] --> [8])
 sum_similarities_knns_member_all_experiment = []
 sum_similarities_knns_non_member_all_experiment = []

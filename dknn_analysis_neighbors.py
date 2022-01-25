@@ -27,7 +27,7 @@ K_NEIGHBORS = [5, 10, 50, 100]  # for DkNN
 AMOUNT_GENERATE_NEIGHBORS = [50, 100, 200]  # for generate_neighboring_points
 SCALES = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2]  # for generate_neighboring_points
 # how many of member/non member elements are used
-AMOUNT_M_NM_TOTAL = 2  # 1000
+AMOUNT_M_NM_TOTAL = 1000
 
 # parameters for testing
 amount_points = 30000
@@ -238,7 +238,8 @@ for scale_ind in range(len(SCALES)):
         ] = generated_neighbors_per_scale_non_member_all[scale_ind][element][
             :amount_calibration
         ]
-        generated_neighbors_per_scale_member[scale_ind][
+        #TODO changed to non member
+        generated_neighbors_per_scale_non_member[scale_ind][
             element
         ] = generated_neighbors_per_scale_non_member_all[scale_ind][element][
             amount_calibration:
@@ -339,7 +340,7 @@ for scale, k_neighbors, amount_generate_neighbors in HYPERPARAMETERS:
     ] = all_data_one_experiment_for_pickle
     all_data_one_experiment_for_pickle = {}
     counter_experiments += 1
-    with open("/home/inafen/jupyter_notebooks/data_neighbors_test7.pickle", "wb") as f:
+    with open("/home/inafen/jupyter_notebooks/data_neighbors_changed_non_member.pickle", "wb") as f:
         pickle.dump(experiment_data_for_pickle, f)
 
 
