@@ -222,7 +222,7 @@ experiments_setup_DkNN(
     non_member_labels[:amount_calibration],
     non_member_data[amount_calibration : amount_calibration + 100],
     non_member_labels[amount_calibration : amount_calibration + 100],
-    "/home/inafen/jupyter_notebooks/validate_DkNN_experiment_1_1.pickle",
+    "/home/inafen/jupyter_notebooks/validate_DkNN_experiment_temp.pickle",
 )
 
 # experiment 1.2

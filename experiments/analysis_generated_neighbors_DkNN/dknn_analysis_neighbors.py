@@ -341,7 +341,7 @@ for scale, k_neighbors, amount_generate_neighbors in HYPERPARAMETERS:
     all_data_one_experiment_for_pickle = {}
     counter_experiments += 1
     with open(
-        "/home/inafen/jupyter_notebooks/data_neighbors_changed_non_member.pickle", "wb"
+        "/home/inafen/jupyter_notebooks/data_neighbors_temp.pickle", "wb"
     ) as f:
         pickle.dump(experiment_data_for_pickle, f)
 
