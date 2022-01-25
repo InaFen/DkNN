@@ -238,7 +238,7 @@ for scale_ind in range(len(SCALES)):
         ] = generated_neighbors_per_scale_non_member_all[scale_ind][element][
             :amount_calibration
         ]
-        #TODO changed to non member
+        # TODO changed to non member
         generated_neighbors_per_scale_non_member[scale_ind][
             element
         ] = generated_neighbors_per_scale_non_member_all[scale_ind][element][
@@ -340,7 +340,9 @@ for scale, k_neighbors, amount_generate_neighbors in HYPERPARAMETERS:
     ] = all_data_one_experiment_for_pickle
     all_data_one_experiment_for_pickle = {}
     counter_experiments += 1
-    with open("/home/inafen/jupyter_notebooks/data_neighbors_changed_non_member.pickle", "wb") as f:
+    with open(
+        "/home/inafen/jupyter_notebooks/data_neighbors_changed_non_member.pickle", "wb"
+    ) as f:
         pickle.dump(experiment_data_for_pickle, f)
 
 

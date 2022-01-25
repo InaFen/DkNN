@@ -214,29 +214,54 @@ def experiments_setup_DkNN(
         return all_data_one_experiment_for_pickle
 
 
-#experiment 1.1
-experiments_setup_DkNN(member_data, member_labels, non_member_data[:amount_calibration], non_member_labels[:amount_calibration], non_member_data[amount_calibration:amount_calibration+100],non_member_labels[amount_calibration:amount_calibration+100], "/home/inafen/jupyter_notebooks/validate_DkNN_experiment_1_1.pickle")
+# experiment 1.1
+experiments_setup_DkNN(
+    member_data,
+    member_labels,
+    non_member_data[:amount_calibration],
+    non_member_labels[:amount_calibration],
+    non_member_data[amount_calibration : amount_calibration + 100],
+    non_member_labels[amount_calibration : amount_calibration + 100],
+    "/home/inafen/jupyter_notebooks/validate_DkNN_experiment_1_1.pickle",
+)
 
-#experiment 1.2
-#same set up as 1.1 but one noisy and one not noisy element is passed forward through DkNN at the same time
-#generate noisy data point
-#TODO very similar to 3.1, so if wanted merge together, rename
-noisy_point_3_1 = generate_neighboring_points(non_member_data[0],1,scale = 0.9, epsilon = 9 )[0]
-noisy_point_label_3_1 = np.array(non_member_labels[0], dtype = np.uint8)
+# experiment 1.2
+# same set up as 1.1 but one noisy and one not noisy element is passed forward through DkNN at the same time
+# generate noisy data point
+# TODO very similar to 3.1, so if wanted merge together, rename
+noisy_point_3_1 = generate_neighboring_points(
+    non_member_data[0], 1, scale=0.9, epsilon=9
+)[0]
+noisy_point_label_3_1 = np.array(non_member_labels[0], dtype=np.uint8)
 
 labels_fprop_element_1_2 = []
 all_data_experiment_1_2_for_pickle = {}
 for element in range(AMOUNT_DATA_TOTAL):
-    data_fprop_element_1_2 = np.concatenate((np.expand_dims(noisy_point_3_1, axis=0), np.expand_dims(non_member_data[element], axis=0)))
+    data_fprop_element_1_2 = np.concatenate(
+        (
+            np.expand_dims(noisy_point_3_1, axis=0),
+            np.expand_dims(non_member_data[element], axis=0),
+        )
+    )
     labels_fprop_element_1_2.extend((noisy_point_label_3_1, non_member_labels[element]))
     all_data_experiment_1_2_for_pickle[element] = experiments_setup_DkNN(
         train_data_DkNN=member_data,
         train_labels_DkNN=member_labels,
-        calibration_data=non_member_data[AMOUNT_DATA_TOTAL:(AMOUNT_DATA_TOTAL+amount_calibration)],
-        calibration_label=non_member_labels[AMOUNT_DATA_TOTAL:(AMOUNT_DATA_TOTAL+amount_calibration)], filepath_pickle=None,
-        data_fprop_DkNN=data_fprop_element_1_2, labels_fprop_DkNN=labels_fprop_element_1_2, save_pickle=False,
-        amount_data_total=2)
-    with open("/home/inafen/jupyter_notebooks/validate_DkNN_experiment_1_2.pickle", "wb") as f:
+        calibration_data=non_member_data[
+            AMOUNT_DATA_TOTAL : (AMOUNT_DATA_TOTAL + amount_calibration)
+        ],
+        calibration_label=non_member_labels[
+            AMOUNT_DATA_TOTAL : (AMOUNT_DATA_TOTAL + amount_calibration)
+        ],
+        filepath_pickle=None,
+        data_fprop_DkNN=data_fprop_element_1_2,
+        labels_fprop_DkNN=labels_fprop_element_1_2,
+        save_pickle=False,
+        amount_data_total=2,
+    )
+    with open(
+        "/home/inafen/jupyter_notebooks/validate_DkNN_experiment_1_2.pickle", "wb"
+    ) as f:
         pickle.dump(all_data_experiment_1_2_for_pickle, f)
 
 # experiment 2.1
@@ -326,76 +351,156 @@ with open(
     pickle.dump(all_data_experiment_2_1_for_pickle, f)
 
 
-#experiment 3.1
-#DkNN gets trained with generated neighbors
-#generate individual neighbors for each point
-generated_neighbors_3_1 = np.zeros((AMOUNT_DATA_TOTAL,AMOUNT_GENERATE_NEIGHBORS+amount_calibration, 28,28,1))
-generated_neighbors_labels_3_1 = np.zeros((AMOUNT_DATA_TOTAL, AMOUNT_GENERATE_NEIGHBORS+amount_calibration), dtype=np.uint8)
+# experiment 3.1
+# DkNN gets trained with generated neighbors
+# generate individual neighbors for each point
+generated_neighbors_3_1 = np.zeros(
+    (AMOUNT_DATA_TOTAL, AMOUNT_GENERATE_NEIGHBORS + amount_calibration, 28, 28, 1)
+)
+generated_neighbors_labels_3_1 = np.zeros(
+    (AMOUNT_DATA_TOTAL, AMOUNT_GENERATE_NEIGHBORS + amount_calibration), dtype=np.uint8
+)
 for element in range(AMOUNT_DATA_TOTAL):
-    generated_neighbors_3_1[element] = generate_neighboring_points(non_member_data[element], AMOUNT_GENERATE_NEIGHBORS+amount_calibration, scale = 0.2, epsilon = 3 )
-    generated_neighbors_labels_3_1[element] = np.full((AMOUNT_GENERATE_NEIGHBORS+amount_calibration), non_member_labels[element] )
+    generated_neighbors_3_1[element] = generate_neighboring_points(
+        non_member_data[element],
+        AMOUNT_GENERATE_NEIGHBORS + amount_calibration,
+        scale=0.2,
+        epsilon=3,
+    )
+    generated_neighbors_labels_3_1[element] = np.full(
+        (AMOUNT_GENERATE_NEIGHBORS + amount_calibration), non_member_labels[element]
+    )
 
-#generate noisy data point
-noisy_point_3_1 = generate_neighboring_points(non_member_data[0],1,scale = 0.9, epsilon = 9 )[0]
-noisy_point_label_3_1 = np.array(non_member_labels[0], dtype = np.uint8)
-print(noisy_point_label_3_1 )
+# generate noisy data point
+noisy_point_3_1 = generate_neighboring_points(
+    non_member_data[0], 1, scale=0.9, epsilon=9
+)[0]
+noisy_point_label_3_1 = np.array(non_member_labels[0], dtype=np.uint8)
+print(noisy_point_label_3_1)
 
-#Print images to decide on suiting scale and epsilon
+# Print images to decide on suiting scale and epsilon
 images = generated_neighbors_3_1[0][:6]
 _, axs = plt.subplots(1, 5, figsize=(8, 8))
 axs = axs.flatten()
 for image, ax in zip(images, axs):
-    ax.imshow(image.squeeze(), cmap='gray')
+    ax.imshow(image.squeeze(), cmap="gray")
 plt.show()
-plt.savefig("/home/inafen/jupyter_notebooks/generated_neighbors_3_1.png", bbox_inches="tight")
+plt.savefig(
+    "/home/inafen/jupyter_notebooks/generated_neighbors_3_1.png", bbox_inches="tight"
+)
 plt.clf()
 
 all_data_experiment_3_1_for_pickle = {}
 labels_fprop_element = []
-#every element has individual neighbors so individual fprop
+# every element has individual neighbors so individual fprop
 for element in range(AMOUNT_DATA_TOTAL):
-    #send one noisy and element through DkNN
-    #expand dimension so data_fprop_element has correct dimension: (2,28,28,1) instead of (56,28,1)
-    data_fprop_element = np.concatenate((np.expand_dims(noisy_point_3_1, axis=0), np.expand_dims(non_member_data[element], axis=0)))
+    # send one noisy and element through DkNN
+    # expand dimension so data_fprop_element has correct dimension: (2,28,28,1) instead of (56,28,1)
+    data_fprop_element = np.concatenate(
+        (
+            np.expand_dims(noisy_point_3_1, axis=0),
+            np.expand_dims(non_member_data[element], axis=0),
+        )
+    )
     labels_fprop_element.extend((noisy_point_label_3_1, non_member_labels[element]))
-    all_data_experiment_3_1_for_pickle[element] = experiments_setup_DkNN(train_data_DkNN=generated_neighbors_3_1[element][:AMOUNT_GENERATE_NEIGHBORS], train_labels_DkNN=generated_neighbors_labels_3_1[element][:AMOUNT_GENERATE_NEIGHBORS],calibration_data=generated_neighbors_3_1[element][AMOUNT_GENERATE_NEIGHBORS:],calibration_label=generated_neighbors_labels_3_1[element][AMOUNT_GENERATE_NEIGHBORS:], filepath_pickle=None,data_fprop_DkNN=data_fprop_element, labels_fprop_DkNN=labels_fprop_element, save_pickle=False,amount_data_total=2)
-with open("/home/inafen/jupyter_notebooks/validate_DkNN_experiment_3_1.pickle", "wb") as f:
+    all_data_experiment_3_1_for_pickle[element] = experiments_setup_DkNN(
+        train_data_DkNN=generated_neighbors_3_1[element][:AMOUNT_GENERATE_NEIGHBORS],
+        train_labels_DkNN=generated_neighbors_labels_3_1[element][
+            :AMOUNT_GENERATE_NEIGHBORS
+        ],
+        calibration_data=generated_neighbors_3_1[element][AMOUNT_GENERATE_NEIGHBORS:],
+        calibration_label=generated_neighbors_labels_3_1[element][
+            AMOUNT_GENERATE_NEIGHBORS:
+        ],
+        filepath_pickle=None,
+        data_fprop_DkNN=data_fprop_element,
+        labels_fprop_DkNN=labels_fprop_element,
+        save_pickle=False,
+        amount_data_total=2,
+    )
+with open(
+    "/home/inafen/jupyter_notebooks/validate_DkNN_experiment_3_1.pickle", "wb"
+) as f:
     pickle.dump(all_data_experiment_3_1_for_pickle, f)
 
 
-#experiment 4.1
-#DkNN gets trained with little suiting generated neighbors and otherwise noisy data (similar to 2.1)
-#TODO same as 2.1 so if wanted merge, rename later
-#generate neighbors to have data with much noise
-generated_neighbors = np.zeros((AMOUNT_GENERATE_NEIGHBORS+amount_calibration, 28,28,1))
-generated_neighbors_labels = np.zeros(AMOUNT_GENERATE_NEIGHBORS+amount_calibration, dtype=np.uint8)
-for index in range(AMOUNT_GENERATE_NEIGHBORS+amount_calibration):
-    generated_neighbors[index] = generate_neighboring_points(non_member_data[index], 1, scale = 0.9, epsilon = 9 ) #generate 1 neighbor for each point
+# experiment 4.1
+# DkNN gets trained with little suiting generated neighbors and otherwise noisy data (similar to 2.1)
+# TODO same as 2.1 so if wanted merge, rename later
+# generate neighbors to have data with much noise
+generated_neighbors = np.zeros(
+    (AMOUNT_GENERATE_NEIGHBORS + amount_calibration, 28, 28, 1)
+)
+generated_neighbors_labels = np.zeros(
+    AMOUNT_GENERATE_NEIGHBORS + amount_calibration, dtype=np.uint8
+)
+for index in range(AMOUNT_GENERATE_NEIGHBORS + amount_calibration):
+    generated_neighbors[index] = generate_neighboring_points(
+        non_member_data[index], 1, scale=0.9, epsilon=9
+    )  # generate 1 neighbor for each point
     generated_neighbors_labels[index] = non_member_labels[index]
 
 amount_no_noise_data_element = 4
 not_noisy_neighbors_element_4_1 = np.zeros((amount_no_noise_data_element, 28, 28, 1))
 not_noisy_neighbors_element_labels_4_1 = np.zeros((amount_no_noise_data_element))
 
-mixed_noise_no_noise_data_neighbors_4_1 = np.zeros((AMOUNT_DATA_TOTAL,amount_no_noise_data_element+AMOUNT_GENERATE_NEIGHBORS, 28, 28, 1))
-mixed_noise_no_noise_labels_neighbors_4_1 = np.zeros((AMOUNT_DATA_TOTAL,amount_no_noise_data_element+AMOUNT_GENERATE_NEIGHBORS))
+mixed_noise_no_noise_data_neighbors_4_1 = np.zeros(
+    (
+        AMOUNT_DATA_TOTAL,
+        amount_no_noise_data_element + AMOUNT_GENERATE_NEIGHBORS,
+        28,
+        28,
+        1,
+    )
+)
+mixed_noise_no_noise_labels_neighbors_4_1 = np.zeros(
+    (AMOUNT_DATA_TOTAL, amount_no_noise_data_element + AMOUNT_GENERATE_NEIGHBORS)
+)
 
 all_data_experiment_4_1_for_pickle = {}
 # since every element will have its own DkNN training data, go through every element individually
 for element in range(AMOUNT_DATA_TOTAL):
     counter = 0
-    #create neighbors that are similar to data point
-    not_noisy_neighbors_element_4_1 = generate_neighboring_points(non_member_data[element], amount = amount_no_noise_data_element, scale=0.2, epsilon=3)
-    not_noisy_neighbors_element_labels_4_1 = np.full(amount_no_noise_data_element, non_member_labels[element])
+    # create neighbors that are similar to data point
+    not_noisy_neighbors_element_4_1 = generate_neighboring_points(
+        non_member_data[element],
+        amount=amount_no_noise_data_element,
+        scale=0.2,
+        epsilon=3,
+    )
+    not_noisy_neighbors_element_labels_4_1 = np.full(
+        amount_no_noise_data_element, non_member_labels[element]
+    )
 
-    #prepare data with noisy data and non noisy data for experiment 2.1 for each element
-    mixed_noise_no_noise_data_neighbors_4_1[element] =np.concatenate((not_noisy_neighbors_element_4_1, generated_neighbors[:AMOUNT_GENERATE_NEIGHBORS]))
-    mixed_noise_no_noise_labels_neighbors_4_1[element] = np.concatenate((not_noisy_neighbors_element_labels_4_1, generated_neighbors_labels[:AMOUNT_GENERATE_NEIGHBORS]))
-    #since every element will have its own DkNN training data, the experiment has to be done individually
+    # prepare data with noisy data and non noisy data for experiment 2.1 for each element
+    mixed_noise_no_noise_data_neighbors_4_1[element] = np.concatenate(
+        (
+            not_noisy_neighbors_element_4_1,
+            generated_neighbors[:AMOUNT_GENERATE_NEIGHBORS],
+        )
+    )
+    mixed_noise_no_noise_labels_neighbors_4_1[element] = np.concatenate(
+        (
+            not_noisy_neighbors_element_labels_4_1,
+            generated_neighbors_labels[:AMOUNT_GENERATE_NEIGHBORS],
+        )
+    )
+    # since every element will have its own DkNN training data, the experiment has to be done individually
     # caution: it is element:element: instead of element:
-    all_data_experiment_4_1_for_pickle[element] =experiments_setup_DkNN(train_data_DkNN=mixed_noise_no_noise_data_neighbors_4_1[element], train_labels_DkNN=mixed_noise_no_noise_labels_neighbors_4_1[element],calibration_data=generated_neighbors[AMOUNT_GENERATE_NEIGHBORS:], calibration_label=generated_neighbors_labels[AMOUNT_GENERATE_NEIGHBORS:], filepath_pickle = None, data_fprop_DkNN= non_member_data[element], labels_fprop_DkNN= non_member_labels[element], save_pickle= False, amount_data_total=1 )
-with open("/home/inafen/jupyter_notebooks/validate_DkNN_experiment_4_1.pickle", "wb") as f:
+    all_data_experiment_4_1_for_pickle[element] = experiments_setup_DkNN(
+        train_data_DkNN=mixed_noise_no_noise_data_neighbors_4_1[element],
+        train_labels_DkNN=mixed_noise_no_noise_labels_neighbors_4_1[element],
+        calibration_data=generated_neighbors[AMOUNT_GENERATE_NEIGHBORS:],
+        calibration_label=generated_neighbors_labels[AMOUNT_GENERATE_NEIGHBORS:],
+        filepath_pickle=None,
+        data_fprop_DkNN=non_member_data[element],
+        labels_fprop_DkNN=non_member_labels[element],
+        save_pickle=False,
+        amount_data_total=1,
+    )
+with open(
+    "/home/inafen/jupyter_notebooks/validate_DkNN_experiment_4_1.pickle", "wb"
+) as f:
     pickle.dump(all_data_experiment_4_1_for_pickle, f)
 
 print("--- %s seconds ---" % (time.time() - start_time))
-

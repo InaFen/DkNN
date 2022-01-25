@@ -1,11 +1,14 @@
 import numpy as np
 from collections import Counter, defaultdict
 
+
 def get_differences_knns_btw_layers(
-    amount_data: int,
-    knns_attribute: list,
-    compares_with_first_layer_only: bool =False
-) -> tuple[dict[str, dict[str, tuple[list[int], list[int]]]], dict[str, dict[str, int]], dict[str, list[int]]]:
+    amount_data: int, knns_attribute: list, compares_with_first_layer_only: bool = False
+) -> tuple[
+    dict[str, dict[str, tuple[list[int], list[int]]]],
+    dict[str, dict[str, int]],
+    dict[str, list[int]],
+]:
     """
     Looks at an attribute (e.g. label, indexes) of the k nearest neighbors of data for each layer (DkNN) and outputs the changes of the knns-attribute between layers.
     The knns_attribute list can have different shapes, depending on the attribute and data set.
@@ -69,7 +72,9 @@ def get_differences_knns_btw_layers(
     return changed_knns_all_points, differences_knns_all_points, differences_knns_total
 
 
-def get_mean_knns_layer(knns_attribute: list , differences_knns_total: dict[str, list[int]]) -> list[np.ndarray]:
+def get_mean_knns_layer(
+    knns_attribute: list, differences_knns_total: dict[str, list[int]]
+) -> list[np.ndarray]:
     """
     Get the mean of an attribute of the knns per inbetween two layers, e.g. mean of changes of knns btw. two layers
     the knns_attribute list can have different shapes, depending on the attribute and data set.
@@ -88,7 +93,9 @@ def get_mean_knns_layer(knns_attribute: list , differences_knns_total: dict[str,
     return mean_knns_layers
 
 
-def get_distances_of_knns(amount_data: int, knns_distances: 'list[tuple[str, np.ndarray[np.ndarray[float]]]]') -> 'dict[str, list[np.ndarray[float]]]' :
+def get_distances_of_knns(
+    amount_data: int, knns_distances: "list[tuple[str, np.ndarray[np.ndarray[float]]]]"
+) -> "dict[str, list[np.ndarray[float]]]":
     """
     Put distances of all knns in an dict with layers as keys
 
@@ -112,7 +119,10 @@ def get_distances_of_knns(amount_data: int, knns_distances: 'list[tuple[str, np.
     return distances_knns_all
 
 
-def get_mean_distances_of_knns(distances_knns_all: 'dict[str, list[np.ndarray[float]]]', knns_distances:  'list[tuple[str, np.ndarray[np.ndarray[float]]]]') -> list:
+def get_mean_distances_of_knns(
+    distances_knns_all: "dict[str, list[np.ndarray[float]]]",
+    knns_distances: "list[tuple[str, np.ndarray[np.ndarray[float]]]]",
+) -> list:
     """
     Get the mean distance of knns for one layer, for all layers.
 
@@ -128,7 +138,10 @@ def get_mean_distances_of_knns(distances_knns_all: 'dict[str, list[np.ndarray[fl
     return mean_distances_knns_layers
 
 
-def get_sum_similarities_of_knns(similarities_knns_all: dict[str, list[int]], knns_similarities: 'list[tuple[str, np.ndarray[np.ndarray[int]]]]') -> list:
+def get_sum_similarities_of_knns(
+    similarities_knns_all: dict[str, list[int]],
+    knns_similarities: "list[tuple[str, np.ndarray[np.ndarray[int]]]]",
+) -> list:
     """
     Get the sum of similar knns btw. two layers, for all layers.
 
@@ -147,8 +160,12 @@ def get_sum_similarities_of_knns(similarities_knns_all: dict[str, list[int]], kn
 def get_similarities_knns_btw_layers(
     amount_data: int,
     knns_attribute: list,
-    compares_with_first_layer_only: bool =False,
-) -> tuple[dict[str, dict[str, tuple[list[int], list[int]]]], dict[str, dict[str, list[int]]], dict[str, list[int]]]:
+    compares_with_first_layer_only: bool = False,
+) -> tuple[
+    dict[str, dict[str, tuple[list[int], list[int]]]],
+    dict[str, dict[str, list[int]]],
+    dict[str, list[int]],
+]:
     """
     Works quite similar to get_differences_knns_btw_layers:
     Compares an knn attribute (e.g. indices or label) between two layers and saves the amount of knns that stay the same between two layers.
@@ -177,7 +194,7 @@ def get_similarities_knns_btw_layers(
                 # compare whether same elements in nn_current_layer and nn_next_layer
                 if Counter(knns_current_layer_point) == Counter(knns_next_layer_point):
                     # save amount of similarities for one point for all points
-                    #for this, append length of current knns because in this case all knns are the same as in the layer before
+                    # for this, append length of current knns because in this case all knns are the same as in the layer before
                     if "layer {}".format(layer) in similarities_knns_total:
                         similarities_knns_total["layer {}".format(layer)].append(
                             len(knns_current_layer_point)

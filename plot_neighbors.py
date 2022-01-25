@@ -7,7 +7,9 @@ from utils.utils_plot import (
 )
 
 # open pickle
-with open("/home/inafen/jupyter_notebooks/data_neighbors_changed_non_member.pickle", "rb") as f:
+with open(
+    "/home/inafen/jupyter_notebooks/data_neighbors_changed_non_member.pickle", "rb"
+) as f:
     loaded_obj = pickle.load(f)
 
 train_accuracy = []
@@ -141,7 +143,7 @@ for experiment in range(len(experiment_setups)):  # for all experiments
             knns_indices_list_non_member,
             compares_with_first_layer_only=False,
         )  # 1 because in each fprop of DkNN 1 input point != amount_m_nm_total (for how many this is repeated)
-        #similarities_knns_total_member e.g. {layer 1: [100], layer 2: [100],...}
+        # similarities_knns_total_member e.g. {layer 1: [100], layer 2: [100],...}
         _, _, similarities_knns_total_member = get_similarities_knns_btw_layers(
             1,
             knns_indices_list_member,
@@ -152,9 +154,7 @@ for experiment in range(len(experiment_setups)):  # for all experiments
             knns_indices_list_non_member,
             compares_with_first_layer_only=True,
         )
-        distances_knns_all_member = get_distances_of_knns(
-            1, knns_distances_list_member
-        )
+        distances_knns_all_member = get_distances_of_knns(1, knns_distances_list_member)
         distances_knns_all_non_member = get_distances_of_knns(
             1, knns_distances_list_non_member
         )
@@ -207,7 +207,6 @@ for experiment in range(len(experiment_setups)):  # for all experiments
                     "layer {}".format(layer)
                 ].append(distances_knns_all_non_member["layer {}".format(layer)][0])
     # outputs mean of changes in nn/ distances for one experiment
-    #TODO sometimes [inf, inf,..]?
     mean_knns_layers_member_one_experiment = get_mean_knns_layer(
         knns_indices_list_member, differences_knns_total_member_points_experiment
     )
