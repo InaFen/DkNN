@@ -73,3 +73,35 @@ def make_lenet5_mnist_model(activation=False):
         pred = Softmax()(pred)
     model = Model(inputs=inputs, outputs=pred)
     return model
+
+def make_cifar10_cnn(from_logits=True, training=False):
+    shape = (32,32,3)
+    i = Input(shape=shape)
+    x = Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=(32, 32, 3))(i)
+    x  = Conv2D(32, (3, 3), activation='relu', padding='same')(x)
+    x  = MaxPooling2D((2, 2))(x)
+    if training:
+        x  = Dropout(0.2)(x) #TODO training = training? also other dropouts
+
+    x  = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+    x  = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+    x  = MaxPooling2D((2, 2))(x)
+    if training:
+        x  = Dropout(0.2)(x)
+
+    x  = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x  = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x  = MaxPooling2D((2, 2))(x)
+    if training:
+        x = Dropout(0.2)(x)
+
+    x  = Flatten()(x)
+    x  = Dense(128, activation='relu')(x)
+    if training:
+        x  = Dropout(0.2)(x)
+    if from_logits:
+        x  = Dense(10)(x)
+    else:
+        x  = Dense(10, activation='softmax')(x)
+    model = Model(i,x)
+    return model
