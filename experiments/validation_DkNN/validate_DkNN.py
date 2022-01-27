@@ -159,7 +159,6 @@ def experiments_setup_DkNN(
     all_data_one_experiment_for_pickle = {}
 
     # Wrap the model into a DkNNModel
-    # DkNN for Member datapoint
     dknn = DkNNModel(
         neighbors=k_neighbors,
         layers=nb_layers,

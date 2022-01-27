@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from dknn import *
 from utils.utils_data import *
-from utils.utils_model import *
+from utils.utils_models import *
 from utils.utils_plot import *
 from utils.utils import *
 
