@@ -238,7 +238,6 @@ for scale_ind in range(len(SCALES)):
         ] = generated_neighbors_per_scale_non_member_all[scale_ind][element][
             :amount_calibration
         ]
-        # TODO changed to non member
         generated_neighbors_per_scale_non_member[scale_ind][
             element
         ] = generated_neighbors_per_scale_non_member_all[scale_ind][element][
