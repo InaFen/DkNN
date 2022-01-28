@@ -266,24 +266,74 @@ for experiment in range(len(sum_similarities_knns_layers_member_all_experiments)
     sum_similarities_knns_non_member_all_experiment.append(sum_experiment_non_member)
 print("Data is ready to be plotted.")
 
-#since plots are too unspecific to show minor differences (e.g. shows as 0.00 instead of real value 0.002), let's compare the values directly
+# since plots are too unspecific to show minor differences (e.g. shows as 0.00 instead of real value 0.002), let's compare the values directly
 layer_0_member_smaller_distance = []
 layer_1_member_smaller_distance = []
 layer_2_member_smaller_distance = []
 layer_3_member_smaller_distance = []
 layer_4_member_smaller_distance = []
 for experiment in range(len(mean_distances_knns_layers_member_all_experiments)):
-    #checks: Is in this experiment the mean distance of the knns for layer x of members smaller than of non-members? If yes, append True, else False
-    layer_0_member_smaller_distance.append(mean_distances_knns_layers_member_all_experiments[experiment][0]<mean_distances_knns_layers_non_member_all_experiments[experiment][0])
-    layer_1_member_smaller_distance.append(mean_distances_knns_layers_member_all_experiments[experiment][1]<mean_distances_knns_layers_non_member_all_experiments[experiment][1])
-    layer_2_member_smaller_distance.append(mean_distances_knns_layers_member_all_experiments[experiment][2]<mean_distances_knns_layers_non_member_all_experiments[experiment][2])
-    layer_3_member_smaller_distance.append(mean_distances_knns_layers_member_all_experiments[experiment][3]<mean_distances_knns_layers_non_member_all_experiments[experiment][3])
-    layer_4_member_smaller_distance.append(mean_distances_knns_layers_member_all_experiments[experiment][4]<mean_distances_knns_layers_non_member_all_experiments[experiment][4])
-print("The mean distance of knns in layer 0 of member data is in {} of {} experiments smaller than the mean distance of non-member data.".format((layer_0_member_smaller_distance.count(True), len(layer_0_member_smaller_distance))))
-print("The mean distance of knns in layer 1 of member data is in {} of {} experiments smaller than the mean distance of non-member data.".format((layer_1_member_smaller_distance.count(True), len(layer_0_member_smaller_distance))))
-print("The mean distance of knns in layer 2 of member data is in {} of {} experiments smaller than the mean distance of non-member data.".format((layer_2_member_smaller_distance.count(True), len(layer_0_member_smaller_distance))))
-print("The mean distance of knns in layer 3 of member data is in {} of {} experiments smaller than the mean distance of non-member data.".format((layer_3_member_smaller_distance.count(True), len(layer_0_member_smaller_distance))))
-print("The mean distance of knns in layer 4 of member data is in {} of {} experiments smaller than the mean distance of non-member data.".format((layer_4_member_smaller_distance.count(True), len(layer_0_member_smaller_distance))))
+    # checks: Is in this experiment the mean distance of the knns for layer x of members smaller than of non-members? If yes, append True, else False
+    layer_0_member_smaller_distance.append(
+        mean_distances_knns_layers_member_all_experiments[experiment][0]
+        < mean_distances_knns_layers_non_member_all_experiments[experiment][0]
+    )
+    layer_1_member_smaller_distance.append(
+        mean_distances_knns_layers_member_all_experiments[experiment][1]
+        < mean_distances_knns_layers_non_member_all_experiments[experiment][1]
+    )
+    layer_2_member_smaller_distance.append(
+        mean_distances_knns_layers_member_all_experiments[experiment][2]
+        < mean_distances_knns_layers_non_member_all_experiments[experiment][2]
+    )
+    layer_3_member_smaller_distance.append(
+        mean_distances_knns_layers_member_all_experiments[experiment][3]
+        < mean_distances_knns_layers_non_member_all_experiments[experiment][3]
+    )
+    layer_4_member_smaller_distance.append(
+        mean_distances_knns_layers_member_all_experiments[experiment][4]
+        < mean_distances_knns_layers_non_member_all_experiments[experiment][4]
+    )
+print(
+    "The mean distance of knns in layer 0 of member data is in {} of {} experiments smaller than the mean distance of non-member data.".format(
+        (
+            layer_0_member_smaller_distance.count(True),
+            len(layer_0_member_smaller_distance),
+        )
+    )
+)
+print(
+    "The mean distance of knns in layer 1 of member data is in {} of {} experiments smaller than the mean distance of non-member data.".format(
+        (
+            layer_1_member_smaller_distance.count(True),
+            len(layer_0_member_smaller_distance),
+        )
+    )
+)
+print(
+    "The mean distance of knns in layer 2 of member data is in {} of {} experiments smaller than the mean distance of non-member data.".format(
+        (
+            layer_2_member_smaller_distance.count(True),
+            len(layer_0_member_smaller_distance),
+        )
+    )
+)
+print(
+    "The mean distance of knns in layer 3 of member data is in {} of {} experiments smaller than the mean distance of non-member data.".format(
+        (
+            layer_3_member_smaller_distance.count(True),
+            len(layer_0_member_smaller_distance),
+        )
+    )
+)
+print(
+    "The mean distance of knns in layer 4 of member data is in {} of {} experiments smaller than the mean distance of non-member data.".format(
+        (
+            layer_4_member_smaller_distance.count(True),
+            len(layer_0_member_smaller_distance),
+        )
+    )
+)
 
 
 plot_member_non_member_layer_experiments_scatter(

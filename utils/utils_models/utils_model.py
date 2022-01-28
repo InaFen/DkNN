@@ -8,11 +8,10 @@ from tensorflow.keras.layers import (
     AveragePooling2D,
     UpSampling2D,
     Softmax,
-    GlobalAveragePooling2D
+    GlobalAveragePooling2D,
 )
 from tensorflow.keras.models import Model
 import tensorflow as tf
-
 
 
 def make_basic_cnn():
@@ -77,7 +76,10 @@ def make_lenet5_mnist_model(activation=False):
     model = Model(inputs=inputs, outputs=pred)
     return model
 
-def make_cifar10_cnn(from_logits: bool =True, training: bool =False) -> 'keras.engine.functional.Functional':
+
+def make_cifar10_cnn(
+    from_logits: bool = True, training: bool = False
+) -> "keras.engine.functional.Functional":
     """
     CIFAR 10 CNN model, based on Model subclass (https://github.com/fraboeni/membership-risk/blob/master/code_base/models.py)
 
@@ -86,38 +88,43 @@ def make_cifar10_cnn(from_logits: bool =True, training: bool =False) -> 'keras.e
     :return: model
     """
 
-    shape = (32,32,3)
+    shape = (32, 32, 3)
     i = Input(shape=shape)
-    x = Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=(32, 32, 3))(i)
-    x  = Conv2D(32, (3, 3), activation='relu', padding='same')(x)
-    x  = MaxPooling2D((2, 2))(x)
+    x = Conv2D(32, (3, 3), activation="relu", padding="same", input_shape=(32, 32, 3))(
+        i
+    )
+    x = Conv2D(32, (3, 3), activation="relu", padding="same")(x)
+    x = MaxPooling2D((2, 2))(x)
     if training:
-        x  = Dropout(0.2)(x, training = training)
+        x = Dropout(0.2)(x, training=training)
 
-    x  = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
-    x  = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
-    x  = MaxPooling2D((2, 2))(x, training = training)
+    x = Conv2D(64, (3, 3), activation="relu", padding="same")(x)
+    x = Conv2D(64, (3, 3), activation="relu", padding="same")(x)
+    x = MaxPooling2D((2, 2))(x, training=training)
     if training:
-        x  = Dropout(0.2)(x, training = training)
+        x = Dropout(0.2)(x, training=training)
 
-    x  = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    x  = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    x  = MaxPooling2D((2, 2))(x)
+    x = Conv2D(128, (3, 3), activation="relu", padding="same")(x)
+    x = Conv2D(128, (3, 3), activation="relu", padding="same")(x)
+    x = MaxPooling2D((2, 2))(x)
     if training:
-        x = Dropout(0.2)(x, training = training)
+        x = Dropout(0.2)(x, training=training)
 
-    x  = Flatten()(x)
-    x  = Dense(128, activation='relu')(x)
+    x = Flatten()(x)
+    x = Dense(128, activation="relu")(x)
     if training:
-        x  = Dropout(0.2)(x)
+        x = Dropout(0.2)(x)
     if from_logits:
-        x  = Dense(10)(x)
+        x = Dense(10)(x)
     else:
-        x  = Dense(10, activation='softmax')(x)
-    model = Model(i,x)
+        x = Dense(10, activation="softmax")(x)
+    model = Model(i, x)
     return model
 
-def make_cifar10_resnet50(base_trainable: bool =True, from_logits: bool=True) -> 'keras.engine.functional.Functional':
+
+def make_cifar10_resnet50(
+    base_trainable: bool = True, from_logits: bool = True
+) -> "keras.engine.functional.Functional":
     """
      CIFAR 10 ResNet50 model, based on Model subclass (https://github.com/fraboeni/membership-risk/blob/master/code_base/models.py)
 
@@ -125,22 +132,24 @@ def make_cifar10_resnet50(base_trainable: bool =True, from_logits: bool=True) ->
     :param from_logits: If False, last Dense layer has activation='softmax'
     :return: model
     """
-    feature_extractor = tf.keras.applications.resnet.ResNet50(input_shape=(224, 224, 3),
-                                                              include_top=False,
-                                                              weights='imagenet')
-    shape = (32,32,3)
+    feature_extractor = tf.keras.applications.resnet.ResNet50(
+        input_shape=(224, 224, 3), include_top=False, weights="imagenet"
+    )
+    shape = (32, 32, 3)
     i = Input(shape=shape)
-    x = UpSampling2D(size=(7, 7))(i)  # upsample 32, 32 to 224, 224 by multiplying with factor 7
+    x = UpSampling2D(size=(7, 7))(
+        i
+    )  # upsample 32, 32 to 224, 224 by multiplying with factor 7
     if not base_trainable:
         feature_extractor.trainable = False
     x = feature_extractor(x)
     x = GlobalAveragePooling2D()(x)
     x = Flatten()(x)
-    x = Dense(1024, activation='relu')(x)
-    x = Dense(512, activation='relu')(x)
+    x = Dense(1024, activation="relu")(x)
+    x = Dense(512, activation="relu")(x)
     if from_logits:
         x = Dense(10)(x)
     else:
-        x = Dense(10, activation='softmax')(x)
-    model = Model(i,x)
+        x = Dense(10, activation="softmax")(x)
+    model = Model(i, x)
     return model

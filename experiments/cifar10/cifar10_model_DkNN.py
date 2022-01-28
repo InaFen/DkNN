@@ -10,7 +10,6 @@ from utils.utils_models.utils_model import make_cifar10_cnn, make_cifar10_resnet
 from dknn import *
 
 
-
 start_time = time.time()
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
@@ -32,10 +31,10 @@ y_test = y_test.flatten()
 
 input_shape = (32, 32, 3)
 
-x_train=x_train.reshape(x_train.shape[0], x_train.shape[1], x_train.shape[2], 3)
-x_train=x_train / 255.0
+x_train = x_train.reshape(x_train.shape[0], x_train.shape[1], x_train.shape[2], 3)
+x_train = x_train / 255.0
 x_test = x_test.reshape(x_test.shape[0], x_test.shape[1], x_test.shape[2], 3)
-x_test=x_test / 255.0
+x_test = x_test / 255.0
 
 try:
     model = tf.keras.models.load_model(path_model)
@@ -104,12 +103,14 @@ def get_activations(data) -> dict:
 
         data_activations[layer] = reshaped_pred
     return data_activations
+
+
 # Wrap the model into a DkNNModel
 dknn = DkNNModel(
     neighbors=k_neighbors,
     layers=nb_layers,
     get_activations=get_activations,
-    train_data= x_train,
+    train_data=x_train,
     train_labels=y_train,
     back_end=backend,
 )
@@ -119,5 +120,3 @@ dknn.calibrate(
     x_test[:10],
     y_test[:10],
 )
-
-

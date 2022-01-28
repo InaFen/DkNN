@@ -10,11 +10,11 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
-
 SHAPES = {
     "cifar10": (32, 32, 3),
     "fmnist": (28, 28, 1),
 }
+
 
 def get_data(name, augmentation=False, batch_size=64, indices_to_use=None):
     """
@@ -28,7 +28,6 @@ def get_data(name, augmentation=False, batch_size=64, indices_to_use=None):
         train and test data and labels in arrays
     """
 
-
     if name == "cifar10":
 
         train, test = tf.keras.datasets.cifar10.load_data()
@@ -37,7 +36,10 @@ def get_data(name, augmentation=False, batch_size=64, indices_to_use=None):
 
         # include only the data points from the specific indices
         if indices_to_use is not None:
-            train_data, train_labels = train_data[indices_to_use], train_labels[indices_to_use]
+            train_data, train_labels = (
+                train_data[indices_to_use],
+                train_labels[indices_to_use],
+            )
             print(train_data.shape)
 
         train_labels = train_labels.flatten()
@@ -46,35 +48,35 @@ def get_data(name, augmentation=False, batch_size=64, indices_to_use=None):
         if augmentation:
             # augmentation from: https://machinelearningmastery.com/how-to-develop-a-cnn-from-scratch-for-cifar-10-photo-classification/
             # data generator from: https://medium.com/analytics-vidhya/write-your-own-custom-data-generator-for-tensorflow-keras-1252b64e41c3
-            train_datagen = ImageDataGenerator(rescale=1. / 255,
-                                               width_shift_range=0.1,
-                                               height_shift_range=0.1,
-                                               horizontal_flip=True,
-                                               )
+            train_datagen = ImageDataGenerator(
+                rescale=1.0 / 255,
+                width_shift_range=0.1,
+                height_shift_range=0.1,
+                horizontal_flip=True,
+            )
             train_generator = train_datagen.flow(
-                train_data, train_labels,
-                batch_size=batch_size)
+                train_data, train_labels, batch_size=batch_size
+            )
 
-            test_datagen = ImageDataGenerator(rescale=1. / 255,
-                                              width_shift_range=0.1,
-                                              height_shift_range=0.1,
-                                              horizontal_flip=True,
-                                              )
+            test_datagen = ImageDataGenerator(
+                rescale=1.0 / 255,
+                width_shift_range=0.1,
+                height_shift_range=0.1,
+                horizontal_flip=True,
+            )
             test_generator = test_datagen.flow(
-                test_data, test_labels,
-                batch_size=batch_size)
+                test_data, test_labels, batch_size=batch_size
+            )
         else:
-            train_datagen = ImageDataGenerator(rescale=1. / 255)
+            train_datagen = ImageDataGenerator(rescale=1.0 / 255)
             train_generator = train_datagen.flow(
-                train_data, train_labels,
-                batch_size=batch_size)
+                train_data, train_labels, batch_size=batch_size
+            )
 
-            test_datagen = ImageDataGenerator(rescale=1. / 255)
+            test_datagen = ImageDataGenerator(rescale=1.0 / 255)
             test_generator = test_datagen.flow(
-                test_data, test_labels,
-                batch_size=batch_size)
-
-
+                test_data, test_labels, batch_size=batch_size
+            )
 
     # elif name == "fmnist":
     #
