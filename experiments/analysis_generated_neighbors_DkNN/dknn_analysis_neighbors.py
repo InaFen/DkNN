@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from dknn import *
-from utils.utils_model import *
+from utils.utils_models.utils_model import *
 from utils.utils_neighbors import *
 
 

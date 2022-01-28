@@ -4,16 +4,14 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from dknn import *
-from utils.utils_model import *
+from utils.utils_models.utils_model import *
 from utils.utils_neighbors import generate_neighboring_points
-from utils.utils_plot import plot_images
 
 from matplotlib import pyplot as plt
 import os
 import matplotlib
 import numpy as np
 import tensorflow as tf
-import itertools
 import pickle
 
 import time
