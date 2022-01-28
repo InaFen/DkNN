@@ -1,5 +1,5 @@
 """
-Code source: https://github.com/fraboeni/membership-risk/blob/master/code_base/model_training.py
+Code based on: https://github.com/fraboeni/membership-risk/blob/master/code_base/model_training.py
 """
 
 import os
@@ -12,9 +12,9 @@ from tensorflow.keras.models import Model
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-#TODO epochs to 50
+
 def main(dataset='cifar10', model_name='cifar10_cnn', augment=True, batch_size=64, lr=0.001, optim="Adam",
-         momentum=0.9, nesterov=False, epochs=1, early_stop=True, save_model=True, log_training=True,
+         momentum=0.9, nesterov=False, epochs=50, early_stop=True, save_model=True, log_training=True,
          logdir='log_dir/models/', from_logits=True):
     train_data, test_data = get_data(dataset, augmentation=augment, batch_size=batch_size,
                                      indices_to_use=range(0, 25000))
@@ -30,7 +30,7 @@ def main(dataset='cifar10', model_name='cifar10_cnn', augment=True, batch_size=6
     else:
         loss = tf.keras.losses.SparseCategoricalCrossentropy()
     model = MODELS[model_name](from_logits=from_logits )
-    model.build_graph().summary() #TODO
+    model.build_graph().summary() #print summary of model structure
     model.compile(optimizer=optimizer,
                   loss=loss,
                   metrics=['accuracy']
@@ -44,8 +44,7 @@ def main(dataset='cifar10', model_name='cifar10_cnn', augment=True, batch_size=6
         callbacks.append(early_stop_callback)
 
     if log_training:
-        # TODO change logfile back
-        logfile = "/home/inafen/jupyter_notebooks/1004_model_cifar10_temp.csv"
+        logfile = "/home/inafen/jupyter_notebooks/1004_model_cifar10_temp.csv" # TODO change logfile back
         #logfile = os.getcwd() + '/../' + logdir + dataset + '/' + str(model_id) + '_' + model_name + '.csv'
         print(logfile)
         logging_callback = tf.keras.callbacks.CSVLogger(logfile, separator=",", append=False)
@@ -57,33 +56,9 @@ def main(dataset='cifar10', model_name='cifar10_cnn', augment=True, batch_size=6
                         callbacks=callbacks,
                         )
     print(history.history)
-    """
-    # summarize filter shapes per layer
-    # we are only interested in convolutional layers
-    # print("Layer names (and shapes) of the model:")
-    layer_indices = []
-    nb_layers = []
-    for i in range(len(model.layers)):
-        layer = model.layers[i]
-        # check for convolutional layer
-        if ("conv" not in layer.name) and ("dense" not in layer.name):
-            # print(layer.name)
-            continue
-        # get filter weights
-        filters, biases = layer.get_weights()
-        # print(layer.name, filters.shape)
-        nb_layers.append(layer.name)
-        layer_indices.append(i)
-    print(nb_layers)
-    print(nb_layers)
-    outputs = [model.get_layer(name=layer).output for layer in nb_layers[1:]]
-    x = tf.keras.layers.Input(shape=(32,32,3))
-    model_mult = Model(inputs=[x], outputs=model.call(x))
-    print(outputs)
-    """
+
     if save_model:
-        #TODO change location back
-        model.save("/home/inafen/jupyter_notebooks/1004_model_cifar10_temp", save_format='tf')
+        model.save("/home/inafen/jupyter_notebooks/1004_model_cifar10_temp", save_format='tf') #TODO change location back
         #model.save(os.getcwd() + '/../' + logdir + dataset + '/' + str(model_id) + '_' + model_name, save_format='tf')
 
 

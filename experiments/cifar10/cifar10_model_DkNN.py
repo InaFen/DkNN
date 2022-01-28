@@ -6,7 +6,7 @@ import os
 import matplotlib
 
 import time
-from utils.utils_models.utils_model import make_cifar10_cnn
+from utils.utils_models.utils_model import make_cifar10_cnn, make_cifar10_resnet50
 from dknn import *
 
 
@@ -21,7 +21,6 @@ if "DISPLAY" not in os.environ:
 amount_points = 30000
 amount_calibration = 10
 backend = NearestNeighbor.BACKEND.FAISS
-#path_model = "/home/inafen/jupyter_notebooks/model_lnet5_2" #TODO
 path_model = "/home/inafen/jupyter_notebooks/1004_model_cifar10_API_CNN_temp"
 k_neighbors = 10
 

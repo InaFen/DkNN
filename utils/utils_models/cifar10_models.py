@@ -1,5 +1,5 @@
 """
-Code source: https://github.com/fraboeni/membership-risk/blob/master/code_base/models.py
+Code based on: https://github.com/fraboeni/membership-risk/blob/master/code_base/models.py
 """
 
 import tensorflow as tf
@@ -36,10 +36,6 @@ class CIFAR10_CNN(tf.keras.Model):
 
 
     def call(self, inputs, training=False):
-        print("here inside the model")
-        print("inputs.shape = {}".format(inputs.shape))  # (None, 32, 32, 3)
-        print("tf.shape = {}".format(tf.shape(inputs)))
-        print("type(inputs) = {}".format(type(inputs)))
         x = self.conv11(inputs)
         x = self.conv12(x)
         x = self.pool1(x)
@@ -66,8 +62,14 @@ class CIFAR10_CNN(tf.keras.Model):
 
         return x
 
-    def build_graph(self, raw_shape = (32,32,3)): #TODO
-        x = tf.keras.layers.Input(shape=raw_shape)
+    def build_graph(self, shape = (32,32,3)):
+        """
+        Helper function to later be able to plot model summary conveniently (model.build_graph().summary())
+
+        :param shape: input shape of data
+        :return: tf.keras.Model(inputs=[x], outputs=self.call(x))
+        """
+        x = tf.keras.layers.Input(shape=shape)
         return tf.keras.Model(inputs=[x], outputs=self.call(x))
 
 class CIFAR10_ResNet50(tf.keras.Model):
