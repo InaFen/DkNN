@@ -1,19 +1,14 @@
-from dknn import *
-from utils.utils_models import *
-from utils.utils_data.get_data import get_data
+"""
+Run DkNN with CIFAR10
+"""
 
-from matplotlib import pyplot as plt
 import os
 import matplotlib
-import numpy as np
-import tensorflow as tf
-import itertools
-import pickle
 
 import time
-from utils.utils_model import make_cifar10_cnn
-from utils.utils_data.get_data import get_data
-from utils.utils_models.cifar10_models import MODELS
+from utils.utils_models.utils_model import make_cifar10_cnn
+from dknn import *
+
 
 
 start_time = time.time()
@@ -27,20 +22,9 @@ amount_points = 30000
 amount_calibration = 10
 backend = NearestNeighbor.BACKEND.FAISS
 #path_model = "/home/inafen/jupyter_notebooks/model_lnet5_2" #TODO
-path_model = "/home/inafen/jupyter_notebooks/1004_model_cifar10_API_temp"
+path_model = "/home/inafen/jupyter_notebooks/1004_model_cifar10_API_CNN_temp"
 k_neighbors = 10
 
-(X_train, y_train), _ = tf.keras.datasets.cifar10.load_data()
-
-train_data_DkNN = X_train[:amount_points]
-train_labels_DkNN = y_train[:amount_points]
-calibration_data = X_train[amount_points : (amount_points + 10) ] #TODO calibration data
-calibration_labels = y_train[amount_points : (amount_points + 10) ]
-fprop_data_DkNN = X_train[(amount_points + 10):]
-fprop_labels_DkNN = y_train[(amount_points + 10):]
-
-#temp----------------------------------------------------------------
-#model = tf.keras.models.load_model(path_model)
 
 cifar10 = tf.keras.datasets.cifar10
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
@@ -57,7 +41,6 @@ x_test=x_test / 255.0
 try:
     model = tf.keras.models.load_model(path_model)
 except:
-    # make lenet5 model for mnist dataset
     model = make_cifar10_cnn()
     # compile the model
     model.compile(
@@ -87,7 +70,6 @@ for i in range(len(model.layers)):
     # print(layer.name, filters.shape)
     nb_layers.append(layer.name)
     layer_indices.append(i)
-print(nb_layers)
 
 # Define callable that returns a dictionary of all activations for a dataset
 def get_activations(data) -> dict:
@@ -135,8 +117,8 @@ dknn = DkNNModel(
 
 # calibrate model
 dknn.calibrate(
-    calibration_data,
-    calibration_labels,
+    x_test[:10],
+    y_test[:10],
 )
 
 

@@ -1,19 +1,21 @@
-from dknn import *
-from utils.utils_models import *
-from utils.utils_data.get_data import get_data
+"""
+This file is currently not working properly.
+The goal is to run the CIFAR10 subclasses.
+The current problem is that model_mult in get_activation does not get the correct input, model.inputs doesn't exist in the subclass since it isn't needed because of call.
+However, when the input is manually added to model_mult (model_mult = Model(inputs=[tf.keras.layers.Input(shape=(32,32,3))], outputs=outputs) it throws an error. My guess is that this happens because they are not seen as "connected".
+--> Problem to tackle: How can you add the input but still keep the outputs for each(!) layer (!= build_graph())?
+"""
 
-from matplotlib import pyplot as plt
 import os
 import matplotlib
 import numpy as np
 import tensorflow as tf
-import itertools
-import pickle
 
 import time
 
-from utils.utils_data.get_data import get_data
 from utils.utils_models.cifar10_models import MODELS
+from dknn import *
+
 
 
 start_time = time.time()
@@ -72,7 +74,7 @@ else:
 
 model = MODELS[model_name](from_logits=from_logits )
 
-model.build_graph().summary() #TODO
+model.build_graph().summary()
 model.compile(optimizer=optimizer,
               loss=loss,
               metrics=['accuracy']
@@ -147,7 +149,7 @@ def get_activations(data) -> dict:
     # obtain all the predictions on the data by making a multi-output model
     print(nb_layers)
     outputs = [model.get_layer(name=layer).output for layer in nb_layers[1:]]
-    model_mult = Model(inputs=model.inputs, outputs=outputs) #TODO the problem is that the input is not retrieved but when it is added manually, the outputs are unconnected to it which throws the error
+    model_mult = Model(inputs=model.inputs, outputs=outputs) #TODO the problem is that the input is not retrieved but when it is added manually (like in build_grapH(), the outputs are unconnected to it which throws the error
 
     # add dimension if only one data point
     if len(data.shape) == 3:
