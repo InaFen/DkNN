@@ -78,13 +78,12 @@ def make_lenet5_mnist_model(activation=False):
 
 
 def make_cifar10_cnn(
-    from_logits: bool = True, training: bool = False
+    from_logits: bool = True
 ) -> "keras.engine.functional.Functional":
     """
     CIFAR 10 CNN model, based on Model subclass (https://github.com/fraboeni/membership-risk/blob/master/code_base/models.py)
 
     :param from_logits: If False, last Dense layer has activation='softmax'
-    :param training: If True, Dropout layers are added
     :return: model
     """
 
@@ -95,25 +94,21 @@ def make_cifar10_cnn(
     )
     x = Conv2D(32, (3, 3), activation="relu", padding="same")(x)
     x = MaxPooling2D((2, 2))(x)
-    if training:
-        x = Dropout(0.2)(x, training=training)
+    x = Dropout(0.2)(x)
 
     x = Conv2D(64, (3, 3), activation="relu", padding="same")(x)
     x = Conv2D(64, (3, 3), activation="relu", padding="same")(x)
     x = MaxPooling2D((2, 2))(x, training=training)
-    if training:
-        x = Dropout(0.2)(x, training=training)
+    x = Dropout(0.2)(x)
 
     x = Conv2D(128, (3, 3), activation="relu", padding="same")(x)
     x = Conv2D(128, (3, 3), activation="relu", padding="same")(x)
     x = MaxPooling2D((2, 2))(x)
-    if training:
-        x = Dropout(0.2)(x, training=training)
+    x = Dropout(0.2)(x)
 
     x = Flatten()(x)
     x = Dense(128, activation="relu")(x)
-    if training:
-        x = Dropout(0.2)(x)
+    x = Dropout(0.2)(x)
     if from_logits:
         x = Dense(10)(x)
     else:
