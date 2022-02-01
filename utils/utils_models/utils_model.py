@@ -98,7 +98,7 @@ def make_cifar10_cnn(
 
     x = Conv2D(64, (3, 3), activation="relu", padding="same")(x)
     x = Conv2D(64, (3, 3), activation="relu", padding="same")(x)
-    x = MaxPooling2D((2, 2))(x, training=training)
+    x = MaxPooling2D((2, 2))(x)
     x = Dropout(0.2)(x)
 
     x = Conv2D(128, (3, 3), activation="relu", padding="same")(x)
