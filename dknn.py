@@ -483,5 +483,6 @@ class DkNNModel(Model):
         # TODO: correct to build it in here? If all neighbors have same label as point, nb_cali shape should be 1 instead of 0?
         # TODO why change it anyways? Says that neighbors are not the same, amount of neighbors that are different, why is that important for amount of cali points?
         # self.nb_cali = self.cali_nonconformity.shape[0]
+        self.nb_cali = self.cali_nonconformity.shape[0]
         self.calibrated = True
         print("DkNN calibration complete.")
