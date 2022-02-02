@@ -77,9 +77,7 @@ def make_lenet5_mnist_model(activation=False):
     return model
 
 
-def make_cifar10_cnn(
-    from_logits: bool = True
-) -> "keras.engine.functional.Functional":
+def make_cifar10_cnn(from_logits: bool = True) -> "keras.engine.functional.Functional":
     """
     CIFAR 10 CNN model, based on Model subclass (https://github.com/fraboeni/membership-risk/blob/master/code_base/models.py)
 

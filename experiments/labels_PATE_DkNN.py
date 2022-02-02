@@ -24,18 +24,20 @@ if "DISPLAY" not in os.environ:
 k_neighbors = 200  # for DkNN
 amount_fprop_dknn = 1000  # how many elements are forwarded through DkNN
 
-amount_points = 30000 #how many points the DkNN is trained on
+amount_points = 30000  # how many points the DkNN is trained on
 amount_calibration = 10
 backend = NearestNeighbor.BACKEND.FAISS
 path_model = "/home/inafen/jupyter_notebooks/model_lnet5_2"
-path_pickle = "/home/inafen/jupyter_notebooks/labels_PATE_DkNN_4.pickle" #pickle where DkNN details and output from fprop is saved
+path_pickle = "/home/inafen/jupyter_notebooks/labels_PATE_DkNN_4.pickle"  # pickle where DkNN details and output from fprop is saved
 
 
-alphas = np.array([40], dtype=float) #for rdp_to_dp in PATE
-n_classes = 10 #for PATE: amount of classes in MNIST
-sigma = 30.0 #for PATE: scale of noise induced in each voting
-delta = 1e-3 #for PATE: precision of DP guarantees
-seed = random.randint(0,1000) #for PATE: seed for pseudo random number generator to create reproducible randomness
+alphas = np.array([40], dtype=float)  # for rdp_to_dp in PATE
+n_classes = 10  # for PATE: amount of classes in MNIST
+sigma = 30.0  # for PATE: scale of noise induced in each voting
+delta = 1e-3  # for PATE: precision of DP guarantees
+seed = random.randint(
+    0, 1000
+)  # for PATE: seed for pseudo random number generator to create reproducible randomness
 
 # load and preprocess MNIST data--------------------------------------------------------------
 # get data only out of training set
@@ -149,7 +151,7 @@ def create_fprop_DkNN(
     amount_data_total=amount_fprop_dknn,
 ):
 
-    #all_data_one_experiment_for_pickle = {}
+    # all_data_one_experiment_for_pickle = {}
     all_data_for_pickle = {}
 
     # Wrap the model into a DkNNModel
@@ -168,7 +170,7 @@ def create_fprop_DkNN(
         calibration_label,
     )
 
-    #send all data at once through DkNN, so in one batch
+    # send all data at once through DkNN, so in one batch
     _, knns_ind, knns_labels, knns_distances = dknn.fprop_np(
         data_fprop_DkNN, get_knns=True
     )
@@ -177,9 +179,7 @@ def create_fprop_DkNN(
     all_data_for_pickle["element"] = data_fprop_DkNN
     all_data_for_pickle["label of elements"] = labels_fprop_DkNN
     all_data_for_pickle["knns_ind"] = knns_ind
-    all_data_for_pickle[
-        "data including knns (= train data DkNN)"
-    ] = train_data_DkNN
+    all_data_for_pickle["data including knns (= train data DkNN)"] = train_data_DkNN
     all_data_for_pickle["knns_labels"] = knns_labels
     all_data_for_pickle["knns_distances"] = knns_distances
     all_data_for_pickle["k_neighbors"] = k_neighbors
@@ -192,7 +192,7 @@ def create_fprop_DkNN(
         return all_data_for_pickle
 
 
-if not(os.path.isfile(path_pickle)):
+if not (os.path.isfile(path_pickle)):
     # create DkNN and fprop amount_fprop_dknn elements at once
     create_fprop_DkNN(
         member_data,
@@ -204,9 +204,7 @@ if not(os.path.isfile(path_pickle)):
         path_pickle,
     )
 
-with open(
-        path_pickle, "rb"
-) as f:
+with open(path_pickle, "rb") as f:
     loaded_obj = pickle.load(f)
 print("Pickle is loaded.")
 
@@ -217,46 +215,78 @@ cost_all_points_all_layers = {}
 optimal_alpha_all_points_one_layer = []
 optimal_alpha_all_points_all_layers = {}
 keys_layers = list(loaded_obj["knns_labels"].keys())
-lowest_privacy_cost = 1.0  #cost is always <1 here so this value should be replaced in the first iteration, it is only created to keep the loop simple
-highest_privacy_cost = -1.0 #cost is always >-1 here so this value should be replaced in the first iteration, it is only created to keep the loop simple
+lowest_privacy_cost = 1.0  # cost is always <1 here so this value should be replaced in the first iteration, it is only created to keep the loop simple
+highest_privacy_cost = (
+    -1.0
+)  # cost is always >-1 here so this value should be replaced in the first iteration, it is only created to keep the loop simple
 for layer in keys_layers:
     for point in range(amount_fprop_dknn):
-        votes = [0,0,0,0,0,0,0,0,0,0] #list to add all votes (=labels of knns) for each class (= length of votes equals amount of MNIST classes) --> not one-hot encoding
-        knn_labels_for_one_layer_one_point = loaded_obj["knns_labels"][layer][point] #get list with all labels of knns
+        votes = [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ]  # list to add all votes (=labels of knns) for each class (= length of votes equals amount of MNIST classes) --> not one-hot encoding
+        knn_labels_for_one_layer_one_point = loaded_obj["knns_labels"][layer][
+            point
+        ]  # get list with all labels of knns
         for neighbor in range(k_neighbors):
-            for label in range(10):#iterate through all classes
+            for label in range(10):  # iterate through all classes
                 if knn_labels_for_one_layer_one_point[neighbor] == label:
                     votes[label] += 1
-        assert sum(votes) == k_neighbors #each nn needs to have a valid label
+        assert sum(votes) == k_neighbors  # each nn needs to have a valid label
         # use personalized pate to find out what the aggregated label of the nn is
-        aggregated_label_point, cost_point, optimal_alpha_point = aggregate_one_time(votes=votes, n_classes=n_classes, sigma=sigma, alphas=alphas, delta=delta, seed=seed)
-        if cost_point < lowest_privacy_cost: #get lowest privacy cost
+        aggregated_label_point, cost_point, optimal_alpha_point = aggregate_one_time(
+            votes=votes,
+            n_classes=n_classes,
+            sigma=sigma,
+            alphas=alphas,
+            delta=delta,
+            seed=seed,
+        )
+        if cost_point < lowest_privacy_cost:  # get lowest privacy cost
             lowest_privacy_cost = cost_point
             lowest_privacy_cost_element = loaded_obj["element"][point]
-        if cost_point > highest_privacy_cost: #get highest privacy cost
+        if cost_point > highest_privacy_cost:  # get highest privacy cost
             highest_privacy_cost = cost_point
             highest_privacy_cost_element = loaded_obj["element"][point]
-        #keep all values for one layer in one list in case this is needed for an analysis later
+        # keep all values for one layer in one list in case this is needed for an analysis later
         aggregated_label_all_points_one_layer.append(aggregated_label_point)
         cost_all_points_one_layer.append(cost_point)
         optimal_alpha_all_points_one_layer.append(optimal_alpha_point)
 
-        print("{}: for element with label {}: aggregated label: {}, privacy cost: {}, optimal alpha point: {}".format(layer, loaded_obj["label of elements"][point],aggregated_label_point, cost_point, optimal_alpha_point))
+        print(
+            "{}: for element with label {}: aggregated label: {}, privacy cost: {}, optimal alpha point: {}".format(
+                layer,
+                loaded_obj["label of elements"][point],
+                aggregated_label_point,
+                cost_point,
+                optimal_alpha_point,
+            )
+        )
 
     # keep all values for all layers in one dict in case this is needed for an analysis later
-    aggregated_label_all_points_all_layers[layer] = aggregated_label_all_points_one_layer
+    aggregated_label_all_points_all_layers[
+        layer
+    ] = aggregated_label_all_points_one_layer
     cost_all_points_all_layers[layer] = cost_all_points_one_layer
     optimal_alpha_all_points_all_layers[layer] = optimal_alpha_all_points_one_layer
 
 print("Lowest privacy cost: {}".format(lowest_privacy_cost))
 plot_images(
-        lowest_privacy_cost_element,
-        1,
-        "/home/inafen/jupyter_notebooks/lowest_privacy_cost",
-    )
+    lowest_privacy_cost_element,
+    1,
+    "/home/inafen/jupyter_notebooks/lowest_privacy_cost",
+)
 print("Highest privacy cost: {}".format(highest_privacy_cost))
 plot_images(
-        highest_privacy_cost_element,
-        1,
-        "/home/inafen/jupyter_notebooks/lowest_privacy_cost",
-    )
+    highest_privacy_cost_element,
+    1,
+    "/home/inafen/jupyter_notebooks/lowest_privacy_cost",
+)
