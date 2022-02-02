@@ -1,4 +1,4 @@
-# source: https: // github.com / privML / privacy - evaluator / blob / main / privacy_evaluator / utils / data_adaptation.py
+# source: https: // github.com / privML / privacy_old - evaluator / blob / main / privacy_evaluator / utils / data_adaptation.py
 
 import numpy as np
 from copy import deepcopy

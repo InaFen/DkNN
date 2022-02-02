@@ -39,7 +39,7 @@ x_test = x_test / 255.0
 try:
     model = tf.keras.models.load_model(path_model)
 except:
-    model = make_cifar10_cnn()
+    model = make_cifar10_resnet50()
     # compile the model
     model.compile(
         optimizer="adam",
