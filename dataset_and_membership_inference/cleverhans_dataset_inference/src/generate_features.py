@@ -166,7 +166,10 @@ def get_mingd_vulnerability(args, loader, model, num_images = 1000):
 
 def feature_extractor(args):
     if args.dataset != "ImageNet":
+        #IF: get train and test data
         train_loader, test_loader = get_dataloaders(args.dataset, args.batch_size, pseudo_labels = False, train_shuffle = False)
+        #IF: get student (why teacher and student?), which is an attacked model
+        #IF: for our use, the model shouldn't be attacked so the model should be loaded manually
         student, _ = get_student_teacher(args) #teacher is not needed
         location = f"{args.model_dir}/final.pt"
         try:
@@ -175,7 +178,7 @@ def feature_extractor(args):
         except:
             student = nn.DataParallel(student).to(args.device)
             student.load_state_dict(torch.load(location, map_location = args.device))   
-    else:
+    else: #IF: our dataset isn't ImageNet, so this code is not used
         train_loader, test_loader = get_dataloaders(args.dataset, args.batch_size, normalize = True, pseudo_labels = False, train_shuffle = False)
         import torchvision.models as models
         imagenet_arch = {"alexnet":models.alexnet, "inception":models.inception_v3,"wrn": models.wide_resnet50_2}
@@ -186,17 +189,18 @@ def feature_extractor(args):
     student.eval()
     
     # _, train_acc  = epoch_test(args, train_loader, student)
+    #IF: get test accuracy
     _, test_acc   = epoch_test(args, test_loader, student, stop = True)
     print(f'Model: {args.model_dir} | \t Test Acc: {test_acc:.3f}')    
-    
+    #IF: get vulnerability, we want to get the minGD vulnerability beccause we have white box access
     mapping = {'pgd':get_adversarial_vulnerability, 'topgd':get_topgd_vulnerability, 'mingd':get_mingd_vulnerability, 'rand': get_random_label_only}
 
     func = mapping[args.feature_type]
-
+    #IF: get the vulnearbility (distance) of the test data and save it
     test_d = func(args, test_loader, student)
     print(test_d)
     torch.save(test_d, f"{args.file_dir}/test_{args.feature_type}_vulnerability_2.pt")
-    
+    #IF: get the vulnearbility (distance) of the train data and save it
     train_d = func(args, train_loader, student)
     print(train_d)
     torch.save(train_d, f"{args.file_dir}/train_{args.feature_type}_vulnerability_2.pt")
@@ -266,13 +270,20 @@ if __name__ == "__main__":
     print("File Directory:", file_dir) ; args.file_dir = file_dir
     if(not os.path.exists(file_dir)):
         os.makedirs(file_dir)
+
+    #TODO added model_dir since not found below
+    #if (not os.path.exists(model_dir)):
+    #    os.makedirs(model_dir)
        
     if args.dataset != "ImageNet":
         with open(f"{model_dir}/model_info.txt", "w") as f:
             json.dump(args.__dict__, f, indent=2)
     args.device = device
     print(device)
-    torch.cuda.set_device(device); torch.manual_seed(args.seed)
+
+    #TODO no GPU available
+    #torch.cuda.set_device(device);
+    torch.manual_seed(args.seed)
     
     n_class = {"CIFAR10":10, "CIFAR100":100,"AFAD":26,"SVHN":10,"ImageNet":1000}
     args.num_classes = n_class[args.dataset]

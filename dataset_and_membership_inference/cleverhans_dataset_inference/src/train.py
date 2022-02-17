@@ -244,7 +244,9 @@ if __name__ == "__main__":
         json.dump(args.__dict__, f, indent=2)
     args.device = device
     print(device)
-    torch.cuda.set_device(device); torch.manual_seed(args.seed)
+    #TODO no GPU available
+    #torch.cuda.set_device(device);
+    torch.manual_seed(args.seed)
     n_class = {"CIFAR10":10, "CIFAR100":100,"AFAD":26,"SVHN":10,"ImageNet":1000}
     args.num_classes = n_class[args.dataset]
     trainer(args)
