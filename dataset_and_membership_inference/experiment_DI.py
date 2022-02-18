@@ -1,26 +1,18 @@
-from models import cifar10_cnn, cifar10_resnet50
-from get_data_refactored import get_data
-import tensorflow as tf
-import os
-import subprocess
-import sys
 from models_torch import Net
 import torch
 import torchvision
 import torchvision.transforms as transforms
-import torch.optim as optim
 import torch.nn as nn
-import torch.nn.functional as F
 from os import path
-from cleverhans_dataset_inference.src.generate_features_MIA_IF import feature_extractor_MIA
-import os, sys
-import time
+import os
 import numpy as np
 import torch.optim as optim
-from importlib import reload
 from tqdm.auto import tqdm
-
 import random
+from cleverhans_dataset_inference.src.p_value_IF import get_p, get_max_p_value, ttest_ind_from_stats, ttest_ind, get_p_values, get_fischer
+import seaborn as sns
+import pandas as pd
+from scipy.stats import hmean
 
 torch.manual_seed(0)
 np.random.seed(0)
@@ -75,7 +67,7 @@ if not (path.exists(PATH_MODEL_TORCH)):
                                            download=True, transform=transform)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=False, num_workers=2)
-    
+
     for epoch in range(2):  # loop over the dataset multiple times
 
         running_loss = 0.0
@@ -140,7 +132,7 @@ except:
 
 #generate features #TODO improve comments, function descirption
 #TODO uncomment
-feature_extractor_MIA()
+#feature_extractor_MIA()
 
 #subprocess.run(['which', 'python'])
 #subprocess.run(['/home/inafen/.conda/envs/mia2/bin/python', 'train.py', '--batch_size', '4', '--epochs', '2'], cwd='cleverhans_dataset_inference/src/')
@@ -165,13 +157,9 @@ test_distance = (test_distance - mean_cifar) / std_cifar
 f_num = 30
 a_num = 30
 
-train_distance_transposed = train_distance.T
-test_distance_transposed = test_distance.T
-print(train_distance_transposed.shape)
-trains_n_all = train_distance_transposed.reshape(1000, f_num)
-tests_n_all = test_distance_transposed.reshape(1000, f_num)
-trains_n = trains_n_all[:, :a_num]
-tests_n = trains_n_all[:, :a_num]
+trains_n = train_distance.T.reshape(1000, f_num)[:, :a_num]
+tests_n = test_distance.T.reshape(1000, f_num)[:, :a_num]
+print(trains_n.shape)
 
 n_ex = split_index
 train = torch.cat((trains_n[:n_ex], tests_n[:n_ex]), dim = 0)
@@ -194,3 +182,89 @@ with tqdm(range(1000)) as pbar:
         loss.backward()
         optimizer.step()
         pbar.set_description('loss {}'.format(loss.item()))
+
+print("Finished training linear model")
+
+outputs_tr= model(trains_n)
+outputs_te = model(tests_n)
+
+import scipy.stats as stats
+def print_inference(outputs_train, outputs_test):
+    m1, m2 = outputs_test[:,0].mean(), outputs_train[:,0].mean()
+    pval = get_p(outputs_train, outputs_test)
+    print(f"p-value = {pval} \t| Mean difference = {m1-m2}")
+
+outputs_tr, outputs_te = outputs_tr[split_index:], outputs_te[split_index:]
+
+print_inference(outputs_tr, outputs_te)
+
+v_type = 'mingd'
+if not os.path.exists(f"/home/inafen/jupyter_notebooks/dataset_inference/cifar10_{v_type}.h5"):
+    total_reps = 40
+    max_m = 45
+    total_inner_rep = 100
+
+    m_list = [x for x in range(2, max_m, 1)]
+    p_values_all_threat_models_dict = {}
+
+
+    p_vals_per_rep_no = {}
+    r_pbar = tqdm(range(total_reps), leave=False)
+    for rep_no in r_pbar:
+        p_values_list = []
+        for m in m_list:
+            p_list = get_p_values(m, outputs_tr, outputs_te, total_inner_rep)
+            try:
+                hm = hmean(p_list)
+            except:
+                hm = 1.0
+            p_values_list.append(hm)
+            pbar.set_description(f"{rep_no: 2d} m={m: 3d}: f{hm: 0.5f}")
+        r_pbar.set_description(f"rep_no: {rep_no + 1}/{total_reps}")
+        p_vals_per_rep_no[rep_no] = p_values_list
+    p_values_all_threat_models_dict = p_vals_per_rep_no
+
+    df_list = []
+    for name, rep_dict in p_values_all_threat_models_dict.items():
+        df = pd.DataFrame(rep_dict).reset_index().assign(m=lambda r: r.index + 2).drop(["index"], axis=1)
+        df_list.append(pd.melt(df, id_vars=["m"], var_name="rep_no", value_name="p_value").assign(threat_model=name))
+    results_df = pd.concat(df_list)
+
+    results_df.to_hdf("/home/inafen/jupyter_notebooks/dataset_inference/cifar10_{v_type}.h5", v_type)
+    results_df
+else:
+    #TODO why is case not used?
+    results_df = pd.read_hdf("/home/inafen/jupyter_notebooks/dataset_inference/cifar10_{v_type}.h5", v_type)
+print(results_df.head())
+
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+
+# Sizes
+SMALL_SIZE = 14
+MEDIUM_SIZE = SMALL_SIZE + 1
+BIGGER_SIZE = MEDIUM_SIZE + 1
+#plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+#plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+#plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsi ze of the x and y labels
+#plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+#plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+#plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+#plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
+#fig, ax = plt.subplots(figsize=(8, 3), dpi=150)
+#g = sns.lineplot(x="m", y="p_value", data=results_df, ax=ax)
+#g.axhline(0.05, ls='--', color="black", alpha=0.4)
+#g.axhline(0.01, ls='--', color="black", alpha=0.4)
+#g.set_xlabel("Number of Sample Revealed")
+#g.set_ylabel("p-value")
+
+#remove duplicates from dataframe
+results_df_no_duplicates = results_df[~results_df.index.duplicated()]
+plt.clf()
+ax = sns.lineplot(x = 'm', y = 'p_value', data = results_df_no_duplicates)
+ax.set_xlabel("Number of Sample Revealed")
+ax.set_ylabel("p-value")
+plt.show()
