@@ -1,3 +1,10 @@
+"""
+Functions based on https://github.com/cleverhans-lab/dataset-inference/blob/main/src/
+
+Functions are specialized for MIA use.
+Functions which are needed for feature extraction --> feature extraction specialized for MIA --> use minGD to get prediction margin (=distance from decision boundary) of data points
+"""
+
 from __future__ import absolute_import
 import numpy as np
 import torch
@@ -300,19 +307,17 @@ def get_mingd_vulnerability_MIA(loader, model, num_images=1000, batch_size = 100
 
     return full_d
 
-def feature_extractor_MIA( device = 'cpu', test_distance_path = "/home/inafen/jupyter_notebooks/dataset_inference/test_distance_vulerability.pt", train_distance_path =  "/home/inafen/jupyter_notebooks/dataset_inference/train_distance_vulerability.pt"):
+def feature_extractor_MIA( device: str = 'cpu', test_distance_path: str = "/home/inafen/jupyter_notebooks/dataset_inference/test_distance_vulerability.pt", train_distance_path: str =  "/home/inafen/jupyter_notebooks/dataset_inference/train_distance_vulerability.pt"):
     """
-    Specolized feature extractor for MIA for CIFAR10 dataset
+    Specialized feature extractor for MIA for CIFAR10 dataset
 
-    :param train_loader: Members
-    :param test_loader: Non-members
-    :param student: pytorch model
-    :return:
+    :param device: Which device is used. 'cpu' if CPU is used.
+    :param test_distance_path: Path where distances from test data should be saved
+    :param train_distance_path: Path where distances from train data should be saved
     """
     train_loader, test_loader = get_dataloaders_MIA(dataset = "CIFAR10", batch_size = 100, pseudo_labels=False, train_shuffle=False)
 
-    #student, _ = get_student_teacher_MIA()  # teacher is not needed
-    #location = "/home/inafen/jupyter_notebooks/dataset_inference/model_student.pt"
+    #IF: get model
     student = Net()
     try:
         student = student.to(device)

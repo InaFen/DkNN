@@ -10,54 +10,31 @@ import torch.optim as optim
 from tqdm.auto import tqdm
 import random
 from cleverhans_dataset_inference.src.p_value_IF import get_p, get_max_p_value, ttest_ind_from_stats, ttest_ind, get_p_values, get_fischer
+from cleverhans_dataset_inference.src.generate_features_MIA_IF import feature_extractor_MIA
 import seaborn as sns
 import pandas as pd
 from scipy.stats import hmean
+import matplotlib.pyplot as plt
+
 
 torch.manual_seed(0)
 np.random.seed(0)
 random.seed(0)
 
-NUM_DATA_POINTS = 10000 # how many of member/non member elements are used
-PATH_MODEL = "/home/inafen/jupyter_notebooks/dataset_inference/model_resnet50"
-
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-"""
-#get member data
-members, testloader = get_data('cifar10', augmentation=False, batch_size=NUM_DATA_POINTS, indices_to_use=range(0, 25000))
-iterator_members = members.next()  #TODO iterator_members good name choice?
-member_data = iterator_members[0]
-member_labels = iterator_members[1]
-"""
+#load model or build and save model
 #torch code source: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 
-#get train and test data
-transform = transforms.Compose(
-    [transforms.ToTensor(),
-     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-
-batch_size = 4
-
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
-                                        download=True, transform=transform)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
-                                          shuffle=True, num_workers=2)
-
-testset = torchvision.datasets.CIFAR10(root='./data', train=False,
-                                       download=True, transform=transform)
-testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
-                                         shuffle=False, num_workers=2)
-
-#load model or build and save model
-net = Net()
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 PATH_MODEL_TORCH = "/home/inafen/jupyter_notebooks/dataset_inference/model_torch.pth"
 
-    #net = Net()
-    #net.load_state_dict(torch.load(PATH_MODEL_TORCH))
 if not (path.exists(PATH_MODEL_TORCH)):
+    # get train and test data
+    transform = transforms.Compose(
+        [transforms.ToTensor(),
+         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    batch_size = 4
+
     trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                             download=True, transform=transform)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
@@ -68,6 +45,10 @@ if not (path.exists(PATH_MODEL_TORCH)):
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=False, num_workers=2)
 
+    #build model
+    net = Net()
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
     for epoch in range(2):  # loop over the dataset multiple times
 
         running_loss = 0.0
@@ -93,53 +74,30 @@ if not (path.exists(PATH_MODEL_TORCH)):
     print('Finished Training')
 
     torch.save(net.state_dict(), PATH_MODEL_TORCH)
-net.eval()
 
-#get test accuracy
-correct = 0
-total = 0
-# since we're not training, we don't need to calculate the gradients for our outputs
-with torch.no_grad():
-    for data in testloader:
-        images, labels = data
-        # calculate outputs by running images through the network
-        outputs = net(images)
-        # the class with the highest energy is what we choose as prediction
-        _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
 
-print(f'Accuracy of the network on the 10000 test images: {100 * correct // total} %')
-"""
-try:
-    model = tf.keras.models.load_model(PATH_MODEL)
-except:
-    model = cifar10_cnn()
-    # compile the model
-    model.compile(
-        optimizer="adam",
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics="accuracy",
-    )
-    # train the model
-    # if you want specify batch size, learning rates etc.
-    history = model.fit(member_data, member_labels, epochs=50, batch_size=64)
-    # export model
-    model.save(PATH_MODEL)
-#train_accuracy = model.evaluate(member_data, member_labels)
-"""
-#TODO different amount of samples, loops, see e-Mail
+    #get test accuracy
+    correct = 0
+    total = 0
+    # since we're not training, we don't need to calculate the gradients for our outputs
+    with torch.no_grad():
+        for data in testloader:
+            images, labels = data
+            # calculate outputs by running images through the network
+            outputs = net(images)
+            # the class with the highest energy is what we choose as prediction
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
 
-#generate features #TODO improve comments, function descirption
-#TODO uncomment
-#feature_extractor_MIA()
+    print(f'Accuracy of the network on the 10000 test images: {100 * correct // total} %')
 
-#subprocess.run(['which', 'python'])
-#subprocess.run(['/home/inafen/.conda/envs/mia2/bin/python', 'train.py', '--batch_size', '4', '--epochs', '2'], cwd='cleverhans_dataset_inference/src/')
-#subprocess.run(['/home/inafen/.conda/envs/mia2/bin/python', 'generate_features.py'], cwd='cleverhans_dataset_inference/src/')
+
+#generate features
+feature_extractor_MIA()
+
 
 #train regression model
-#TODO what does teacher stand for?
 #code base source: https://github.com/cleverhans-lab/dataset-inference/blob/main/src/notebooks/CIFAR10_mingd.ipynb
 split_index = 500
 
@@ -236,30 +194,6 @@ else:
     #TODO why is case not used?
     results_df = pd.read_hdf("/home/inafen/jupyter_notebooks/dataset_inference/cifar10_{v_type}.h5", v_type)
 print(results_df.head())
-
-
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-
-
-# Sizes
-SMALL_SIZE = 14
-MEDIUM_SIZE = SMALL_SIZE + 1
-BIGGER_SIZE = MEDIUM_SIZE + 1
-#plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
-#plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
-#plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsi ze of the x and y labels
-#plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-#plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-#plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
-#plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
-
-#fig, ax = plt.subplots(figsize=(8, 3), dpi=150)
-#g = sns.lineplot(x="m", y="p_value", data=results_df, ax=ax)
-#g.axhline(0.05, ls='--', color="black", alpha=0.4)
-#g.axhline(0.01, ls='--', color="black", alpha=0.4)
-#g.set_xlabel("Number of Sample Revealed")
-#g.set_ylabel("p-value")
 
 #remove duplicates from dataframe
 results_df_no_duplicates = results_df[~results_df.index.duplicated()]

@@ -1,7 +1,7 @@
 """
 Functions from https://github.com/cleverhans-lab/dataset-inference/blob/main/src/notebooks/CIFAR10_mingd.ipynb
 
-P value functions for hypothesis testing.
+P-value functions for hypothesis testing.
 The lower the p value is, the more likely the null-hypothesis is rejected (== model is stolen).
 """
 
