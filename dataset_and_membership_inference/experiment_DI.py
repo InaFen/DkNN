@@ -13,6 +13,18 @@ import torch.nn as nn
 import torch.nn.functional as F
 from os import path
 from cleverhans_dataset_inference.src.generate_features_MIA_IF import feature_extractor_MIA
+import os, sys
+import time
+import numpy as np
+import torch.optim as optim
+from importlib import reload
+from tqdm.auto import tqdm
+
+import random
+
+torch.manual_seed(0)
+np.random.seed(0)
+random.seed(0)
 
 NUM_DATA_POINTS = 10000 # how many of member/non member elements are used
 PATH_MODEL = "/home/inafen/jupyter_notebooks/dataset_inference/model_resnet50"
@@ -51,10 +63,19 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 PATH_MODEL_TORCH = "/home/inafen/jupyter_notebooks/dataset_inference/model_torch.pth"
 
-if path.exists(PATH_MODEL_TORCH):
-    net = Net()
-    net.load_state_dict(torch.load(PATH_MODEL_TORCH))
-else:
+    #net = Net()
+    #net.load_state_dict(torch.load(PATH_MODEL_TORCH))
+if not (path.exists(PATH_MODEL_TORCH)):
+    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
+                                            download=True, transform=transform)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
+                                              shuffle=True, num_workers=2)
+
+    testset = torchvision.datasets.CIFAR10(root='./data', train=False,
+                                           download=True, transform=transform)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
+                                             shuffle=False, num_workers=2)
+    
     for epoch in range(2):  # loop over the dataset multiple times
 
         running_loss = 0.0
@@ -117,11 +138,59 @@ except:
 """
 #TODO different amount of samples, loops, see e-Mail
 
-#generate features
-feature_extractor_MIA(train_loader= trainloader, test_loader= testloader, student= net)
+#generate features #TODO improve comments, function descirption
+#TODO uncomment
+feature_extractor_MIA()
 
 #subprocess.run(['which', 'python'])
 #subprocess.run(['/home/inafen/.conda/envs/mia2/bin/python', 'train.py', '--batch_size', '4', '--epochs', '2'], cwd='cleverhans_dataset_inference/src/')
 #subprocess.run(['/home/inafen/.conda/envs/mia2/bin/python', 'generate_features.py'], cwd='cleverhans_dataset_inference/src/')
 
-#notebook
+#train regression model
+#TODO what does teacher stand for?
+#code base source: https://github.com/cleverhans-lab/dataset-inference/blob/main/src/notebooks/CIFAR10_mingd.ipynb
+split_index = 500
+
+test_distance = (torch.load("/home/inafen/jupyter_notebooks/dataset_inference/test_distance_vulerability.pt"))
+train_distance = (torch.load("/home/inafen/jupyter_notebooks/dataset_inference/train_distance_vulerability.pt"))
+mean_cifar = train_distance.mean(dim = (0,1))
+std_cifar = train_distance.std(dim = (0,1))
+
+train_distance = train_distance.sort(dim = 1)[0]
+test_distance = test_distance.sort(dim = 1)[0]
+
+train_distance = (train_distance - mean_cifar) / std_cifar
+test_distance = (test_distance - mean_cifar) / std_cifar
+
+f_num = 30
+a_num = 30
+
+train_distance_transposed = train_distance.T
+test_distance_transposed = test_distance.T
+print(train_distance_transposed.shape)
+trains_n_all = train_distance_transposed.reshape(1000, f_num)
+tests_n_all = test_distance_transposed.reshape(1000, f_num)
+trains_n = trains_n_all[:, :a_num]
+tests_n = trains_n_all[:, :a_num]
+
+n_ex = split_index
+train = torch.cat((trains_n[:n_ex], tests_n[:n_ex]), dim = 0)
+y = torch.cat((torch.zeros(n_ex), torch.ones(n_ex)), dim = 0)
+
+rand=torch.randperm(y.shape[0])
+train = train[rand]
+y = y[rand]
+
+model = nn.Sequential(nn.Linear(a_num,100),nn.ReLU(),nn.Linear(100,1),nn.Tanh())
+criterion = nn.CrossEntropyLoss()
+optimizer =torch.optim.SGD(model.parameters(), lr=0.1)
+
+with tqdm(range(1000)) as pbar:
+    for epoch in pbar:
+        optimizer.zero_grad()
+        inputs = train
+        outputs = model(inputs)
+        loss = -1 * ((2*y-1)*(outputs.squeeze(-1))).mean()
+        loss.backward()
+        optimizer.step()
+        pbar.set_description('loss {}'.format(loss.item()))
