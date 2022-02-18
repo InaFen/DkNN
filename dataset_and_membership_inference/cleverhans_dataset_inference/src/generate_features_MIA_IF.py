@@ -165,21 +165,6 @@ def get_dataloaders_MIA(dataset, batch_size, pseudo_labels=False, normalize=Fals
             cifar_train = PseudoDataset(aux_data, aux_targets, transform=transform_train)
             train_loader = DataLoader(cifar_train, batch_size=batch_size, shuffle=train_shuffle)
 
-    else:
-        TRAIN_CSV_PATH = '/home/users/myaghini/AFAD_saved_model/afad_train.csv'
-        TEST_CSV_PATH = '/home/users/myaghini/AFAD_saved_model/afad_test.csv'
-        IMAGE_PATH = '/home/users/myaghini/AFAD-Full'
-        NUM_WORKERS = 3
-        train_transform = transforms.Compose(
-            [transforms.Resize((128, 128)), transforms.RandomCrop((120, 120)), transforms.ToTensor()])
-        test_transform = transforms.Compose(
-            [transforms.Resize((128, 128)), transforms.CenterCrop((120, 120)), transforms.ToTensor()])
-
-        train_dataset = AFADDatasetAge(csv_path=TRAIN_CSV_PATH, img_dir=IMAGE_PATH, transform=train_transform)
-        test_dataset = AFADDatasetAge(csv_path=TEST_CSV_PATH, img_dir=IMAGE_PATH, transform=test_transform)
-
-        train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True, num_workers=NUM_WORKERS)
-        test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False, num_workers=NUM_WORKERS)
 
     return train_loader, test_loader
 
@@ -200,7 +185,7 @@ def mingd_MIA(model, X, y, distance, target,alpha_l_1 = 1.0, alpha_l_2 = 0.01, a
             preds = model(X_r + delta_r)
             new_remaining = (preds.max(1)[1] != target[remaining])
             remaining_temp = remaining.clone()
-            remaining[remaining] = new_remaining #TODO changed to remaining_temp
+            remaining[remaining_temp] = new_remaining #IF: changed to remaining_temp to avoid error
         else:
             preds = model(X + delta)
             remaining = (preds.max(1)[1] != target)
@@ -291,7 +276,7 @@ def get_mingd_vulnerability_MIA(loader, model, num_images=1000, batch_size = 100
             for target_i in range(num_classes):
                 X, y = batch[0].to(device), batch[1].to(device)
                 # args.lamb = 0.0001
-                delta = mingd_unoptimized_MIA(model, X, y, distance, target=y * 0 + target_i)
+                delta = mingd_MIA(model, X, y, distance, target=y * 0 + target_i)
                 yp = model(X + delta)
                 distance_dict = {"linf": norms_linf_squeezed, "l1": norms_l1_squeezed, "l2": norms_l2_squeezed}
                 distances = distance_dict[distance](delta)
