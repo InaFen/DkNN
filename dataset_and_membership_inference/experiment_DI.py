@@ -94,7 +94,7 @@ if not (path.exists(PATH_MODEL_TORCH)):
 
 
 #generate features
-feature_extractor_MIA()
+#feature_extractor_MIA()
 
 
 #train regression model
@@ -199,6 +199,6 @@ print(results_df.head())
 results_df_no_duplicates = results_df[~results_df.index.duplicated()]
 plt.clf()
 ax = sns.lineplot(x = 'm', y = 'p_value', data = results_df_no_duplicates)
-ax.set_xlabel("Number of Sample Revealed")
+ax.set_xlabel("Number of samples revealed")
 ax.set_ylabel("p-value")
 plt.show()
