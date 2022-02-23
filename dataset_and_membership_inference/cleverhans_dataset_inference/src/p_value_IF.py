@@ -26,6 +26,7 @@ def get_p_values(num_ex, train, test, k):
     p_values = []
     positions_list = []
     for i in range(k):
+        #select random num_ex amount of elements
         positions = torch.randperm(total)[:num_ex]
         p_val = get_p(train[positions], test[positions])
         positions_list.append(positions)
