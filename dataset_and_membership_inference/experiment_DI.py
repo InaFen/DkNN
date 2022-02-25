@@ -1,3 +1,46 @@
+"""
+Experiment about dataset inference, lightly adapted for MIA.
+(Sources for specific code parts see as comments down below in specific code parts, DI based on https://github.com/cleverhans-lab/dataset-inference)
+
+1. Load trained model or train model on CIFAR10 dataset.
+2. Feature extractor: For 1000 images, from train, test set each, calculate the vulnerability (distances via minGD), save train, test distances seperately.
+3. Train regressor: Linear model has as training data half member, half non-member data.
+4. Run member and non-member data through regressor. The regressor outputs how likely a data point contains private information (= is member).
+5. Get p values for specific amount of random elements from member and non-member regressor outputs.
+P-value is calculated by performing the t-test on the member and non-member regressor outputs. Explanation of t-test see down below.
+6. Calculate the harmonic mean of p-values from 5.
+7. Repeat 5.,6. for different amounts.
+8. Save information from 5.-7. in dataframe. Plot data from dataframe (y-axis: p-value (more specific harmonic mean of p-values), x-axis: amount of elements).
+
+##################################
+Overview over t-test (source: scipy.stats -> ttest_ind, for more information see ttest_ind function):
+Calculate the T-test for the means of *two independent* samples of scores.
+
+This is a two-sided test for the null hypothesis that 2 independent samples
+have identical average (expected) values. This test assumes that the
+populations have identical variances by default.
+
+Suppose we observe two independent samples, e.g. flower petal lengths, and
+    we are considering whether the two samples were drawn from the same
+    population (e.g. the same species of flower or two species with similar
+    petal characteristics) or two different populations.
+
+    The t-test quantifies the difference between the arithmetic means
+    of the two samples. The p-value quantifies the probability of observing
+    as or more extreme values assuming the null hypothesis, that the
+    samples are drawn from populations with the same population means, is true.
+    A p-value larger than a chosen threshold (e.g. 5% or 1%) indicates that
+    our observation is not so unlikely to have occurred by chance. Therefore,
+    we do not reject the null hypothesis of equal population means.
+    If the p-value is smaller than our threshold, then we have evidence
+    against the null hypothesis of equal population means.
+
+    By default, the p-value is determined by comparing the t-statistic of the
+    observed data against a theoretical t-distribution.
+
+"""
+
+
 from models_torch import Net
 import torch
 import torchvision
@@ -106,22 +149,25 @@ if not (path.exists(PATH_MODEL_TORCH)):
         f"Accuracy of the network on the 10000 test images: {100 * correct // total} %"
     )
 
-
-# generate features
-# feature_extractor_MIA()
-
+if not os.path.exists(
+    "/home/inafen/jupyter_notebooks/dataset_inference/test_distance_vulerability.pt"
+) or not os.path.exists(
+    "/home/inafen/jupyter_notebooks/dataset_inference/train_distance_vulerability.pt"
+):
+    # generate features
+    feature_extractor_MIA()
+else:
+    # get distances of test and train set
+    test_distance = torch.load(
+        "/home/inafen/jupyter_notebooks/dataset_inference/test_distance_vulerability.pt"
+    )
+    train_distance = torch.load(
+        "/home/inafen/jupyter_notebooks/dataset_inference/train_distance_vulerability.pt"
+    )
 
 # train regression model
 # code base source: https://github.com/cleverhans-lab/dataset-inference/blob/main/src/notebooks/CIFAR10_mingd.ipynb
 split_index = 500
-
-#get distances of test and train set
-test_distance = torch.load(
-    "/home/inafen/jupyter_notebooks/dataset_inference/test_distance_vulerability.pt"
-)
-train_distance = torch.load(
-    "/home/inafen/jupyter_notebooks/dataset_inference/train_distance_vulerability.pt"
-)
 
 #mean distance of training data (sum distances/ amount distances)
 #for each distance type (linf, l2, l1)
@@ -130,7 +176,7 @@ mean_distance_train = train_distance.mean(dim=(0, 1))
 #for each distance type (linf, l2, l1)
 std_deviation_distance_train = train_distance.std(dim=(0, 1))
 
-#Sorts the elements of the distance tensor along dim 1 in ascending order by value.
+#Sort: sorts the elements of the distance tensor along dim 1 in ascending order by value.
 #inside each array of the given dimension the values get sorted, so since dim = 1 and tensor has shape (1000,10,3) --> the distances for each class for one point get sorted
 #--> distances are sorted vertically, classes are irrelevant: means for one element in array of first class, first spot is the lowest distance of distance type 0 and so on (distance type 0 can be found: [0][0], [1][0],[2][0],...)
 train_distance_sorted_distance_vertically, _ = train_distance.sort(dim=1)
@@ -185,6 +231,7 @@ with tqdm(range(1000)) as pbar: #shows progress meter
 print("Finished training linear model")
 
 #run member and non-member data through regressor
+#outputs are how likely data point is member
 outputs_regressor_train = model(train_distance_sorted_distance_types)
 outputs_regressor_test = model(tests_distance_sorted_distance_types)
 
@@ -199,7 +246,7 @@ def print_inference(outputs_train, outputs_test) -> None:
     :return: None
     """
     #[:,0] --> [ first_row:last_row , column_0 ]
-    #get mean values of predictions (how close to prediction margin ?) #TODO
+    #get mean values of predictions (how likely data is a member)
     mean_prediction_test, mean_prediction_train = outputs_test[:, 0].mean(), outputs_train[:, 0].mean()
     #get p value (calculated through T-test)
     p_value = get_p(outputs_train, outputs_test)

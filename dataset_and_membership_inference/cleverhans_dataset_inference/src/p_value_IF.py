@@ -26,8 +26,9 @@ def get_p_values(num_ex, train, test, k):
     p_values = []
     positions_list = []
     for i in range(k):
-        #select random num_ex amount of elements
+        #select random num_ex amount of elements to get p value for
         positions = torch.randperm(total)[:num_ex]
+        #gets predictions of regressor at the specific positions and performs ttest in get_p on them
         p_val = get_p(train[positions], test[positions])
         positions_list.append(positions)
         p_values.append(p_val)
