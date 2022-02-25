@@ -479,13 +479,15 @@ def feature_extractor_MIA(
     device: str = "cpu",
     test_distance_path: str = "/home/inafen/jupyter_notebooks/dataset_inference/test_distance_vulerability.pt",
     train_distance_path: str = "/home/inafen/jupyter_notebooks/dataset_inference/train_distance_vulerability.pt",
-):
+    num_images: int = 1000
+) -> None:
     """
     Specialized feature extractor for MIA for CIFAR10 dataset
 
     :param device: Which device is used. 'cpu' if CPU is used.
     :param test_distance_path: Path where distances from test data should be saved
     :param train_distance_path: Path where distances from train data should be saved
+    :param num_images: For how many images distances should be calculated
     """
     train_loader, test_loader = get_dataloaders_MIA(
         dataset="CIFAR10", batch_size=100, pseudo_labels=False, train_shuffle=False
@@ -510,11 +512,11 @@ def feature_extractor_MIA(
             )
         )
 
-    # IF: get the vulnearbility (distance) of the test data and save it
-    test_d = get_mingd_vulnerability_MIA(test_loader, student, num_images=1000)
+    # IF: get the vulnerability (distance) of the test data and save it
+    test_d = get_mingd_vulnerability_MIA(test_loader, student, num_images=num_images)
     print(test_d)
     torch.save(test_d, test_distance_path)
-    # IF: get the vulnearbility (distance) of the train data and save it
-    train_d = get_mingd_vulnerability_MIA(train_loader, student, num_images=1000)
+    # IF: get the vulnerability (distance) of the train data and save it
+    train_d = get_mingd_vulnerability_MIA(train_loader, student, num_images=num_images)
     print(train_d)
     torch.save(train_d, train_distance_path)
