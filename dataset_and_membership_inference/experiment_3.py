@@ -30,16 +30,14 @@ from models_torch_cifar import mobilenet_v2
 amount_repetitions = 10
 
 
-#experiment 3.1
-amount_members = 25 #smallest size of member dataset which gets recognized as such by DI #TODO change t0 45?
-percentage_members_in_mixed = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
+# experiment 3.1
+amount_members = 25  # smallest size of member dataset which gets recognized as such by DI #TODO change t0 45?
+percentage_members_in_mixed = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
 
-amount_data_from_dataset = (
-    600
-)  # all available data --> how much data should be used to get distances, double amount_data because non-members have to be split (see down below) #TODO change back to 400*amount_repitions
+amount_data_from_dataset = 600  # all available data --> how much data should be used to get distances, double amount_data because non-members have to be split (see down below) #TODO change back to 400*amount_repitions
 amount_data = 250  # how much data should be used for p-value , for each dataset
 
-#TODO depending on seed success of experiments changes
+# TODO depending on seed success of experiments changes
 torch.manual_seed(0)
 np.random.seed(0)
 random.seed(0)
@@ -52,7 +50,7 @@ PATH_MODEL_TORCH = "/home/inafen/jupyter_notebooks/dataset_inference/mobilenet_v
 PATH_TRAIN_VULNERABILITY = "/home/inafen/jupyter_notebooks/dataset_inference/train_distance_vulnerability_mobilenet_v2_600.pt"
 PATH_TEST_VULNERABILITY = "/home/inafen/jupyter_notebooks/dataset_inference/test_distance_vulnerability_mobilenet_v2_600.pt"
 PATH_EXPERIMENT_3 = "/home/inafen/jupyter_notebooks/dataset_and_membership_inference/experiment_3.pickle"
-#TODO "/home/inafen/jupyter_notebooks/dataset_and_membership_inference/experiment_2_(non)_members.pickle" --> different results
+# TODO "/home/inafen/jupyter_notebooks/dataset_and_membership_inference/experiment_2_(non)_members.pickle" --> different results
 if not (path.exists(PATH_MODEL_TORCH)):
     # get train and test data
     transform = transforms.Compose(
@@ -74,7 +72,7 @@ if not (path.exists(PATH_MODEL_TORCH)):
         testset, batch_size=batch_size, shuffle=False, num_workers=2
     )
 
-    #get pretrained model
+    # get pretrained model
     model = mobilenet_v2(pretrained=True)
     model.eval()  # for evaluation --> if model was to be trained more, switch back to model.train()
 
@@ -100,7 +98,7 @@ if not (path.exists(PATH_MODEL_TORCH)):
     print(
         f"Accuracy of the network on the 10000 test images: {100 * correct // total} %"
     )
-    #Accuracy of the network on the 10000 test images: 88 %
+    # Accuracy of the network on the 10000 test images: 88 %
 
     print("Get train accuracy")
     correct = 0
@@ -119,35 +117,30 @@ if not (path.exists(PATH_MODEL_TORCH)):
     print(
         f"Accuracy of the network on the 50000 train images: {100 * correct // total} %"
     )
-    #Accuracy of the network on the 50000 train images: 93 %
+    # Accuracy of the network on the 50000 train images: 93 %
 
 # get distances via feature extractor or load distances for amount_data_from_dataset elements each
-if not os.path.exists(
-    PATH_TRAIN_VULNERABILITY
-) or not os.path.exists(
+if not os.path.exists(PATH_TRAIN_VULNERABILITY) or not os.path.exists(
     PATH_TEST_VULNERABILITY
 ):
     # generate features for amount_data_from_dataset elements each
-    feature_extractor_MIA(num_images=amount_data_from_dataset, test_distance_path=PATH_TEST_VULNERABILITY, train_distance_path=PATH_TRAIN_VULNERABILITY, model_path=PATH_MODEL_TORCH)
+    feature_extractor_MIA(
+        num_images=amount_data_from_dataset,
+        test_distance_path=PATH_TEST_VULNERABILITY,
+        train_distance_path=PATH_TRAIN_VULNERABILITY,
+        model_path=PATH_MODEL_TORCH,
+    )
     # get distances of test and train set (for amount_data_from_dataset elements each)
-    test_distance = torch.load(
-        PATH_TEST_VULNERABILITY
-    )
-    train_distance = torch.load(
-        PATH_TRAIN_VULNERABILITY
-    )
+    test_distance = torch.load(PATH_TEST_VULNERABILITY)
+    train_distance = torch.load(PATH_TRAIN_VULNERABILITY)
 else:
     # get distances of test and train set (for amount_data_from_dataset elements each)
-    test_distance = torch.load(
-        PATH_TEST_VULNERABILITY
-    )
-    train_distance = torch.load(
-        PATH_TRAIN_VULNERABILITY
-    )
+    test_distance = torch.load(PATH_TEST_VULNERABILITY)
+    train_distance = torch.load(PATH_TRAIN_VULNERABILITY)
 
 # train regression model
 # code base source: https://github.com/cleverhans-lab/dataset-inference/blob/main/src/notebooks/CIFAR10_mingd.ipynb
-split_index = 100 #TODO 500
+split_index = 100  # TODO 500
 
 # mean distance of training data (sum distances/ amount distances)
 # for each distance type (linf, l2, l1)
@@ -246,10 +239,13 @@ outputs_regressor_train = model(train_distance_sorted_distance_types)
 outputs_regressor_test = model(tests_distance_sorted_distance_types)
 # split outputs_regressor_test in test data (non-member) used for p-value & test data used as part of "member" data used for p-value
 outputs_regressor_test_non_member, outputs_regressor_test_member_fake = torch.split(
-    outputs_regressor_test, int(amount_data_from_dataset//2)
+    outputs_regressor_test, int(amount_data_from_dataset // 2)
 )
 
-def get_p_value_without_one_point_for_whole_range(mixed_set, non_member_set, start_index: int, end_index: int):
+
+def get_p_value_without_one_point_for_whole_range(
+    mixed_set, non_member_set, start_index: int, end_index: int
+):
     """
     Remove one element from mixed set (and thus also one element from non-members) --> calculate p-value without this element.
     Repeat for all elements in given index range. Put the element back in mixed set after p-value is calculated.
@@ -260,52 +256,74 @@ def get_p_value_without_one_point_for_whole_range(mixed_set, non_member_set, sta
     :param end_index: Index of last element that should be removed
     :return: p-values (dict with all p-values from all iterations)
     """
-    p_values_and_index = {} #TODO remove in case it is not needed later
+    p_values_and_index = {}  # TODO remove in case it is not needed later
     p_values = []
-    for index in range(start_index, end_index+1):
-        #remove element from mixed set
-        mixed_set_without_element = torch.cat([mixed_set[:index], mixed_set[index+1:]])
-        #remove also this element from non-members so has same shape. Could remove any element but to not always remove same element in each loop, remove the current_index element
-        non_members_without_element = torch.cat([non_member_set[:index], non_member_set[index+1:]])
-        #get p-value
-        p_value_without_element = get_p(mixed_set_without_element, non_members_without_element)
-        p_values_and_index["Index of removed element {}".format(index)] = p_value_without_element
+    for index in range(start_index, end_index + 1):
+        # remove element from mixed set
+        mixed_set_without_element = torch.cat(
+            [mixed_set[:index], mixed_set[index + 1 :]]
+        )
+        # remove also this element from non-members so has same shape. Could remove any element but to not always remove same element in each loop, remove the current_index element
+        non_members_without_element = torch.cat(
+            [non_member_set[:index], non_member_set[index + 1 :]]
+        )
+        # get p-value
+        p_value_without_element = get_p(
+            mixed_set_without_element, non_members_without_element
+        )
+        p_values_and_index[
+            "Index of removed element {}".format(index)
+        ] = p_value_without_element
         p_values.append(p_value_without_element)
     return p_values
 
+
 # experiment 3.1
 # first experiment
-if not os.path.exists(
-    PATH_EXPERIMENT_3
-):
+if not os.path.exists(PATH_EXPERIMENT_3):
     experiment = {}
-    #go through all percentages of members in mixed set
+    # go through all percentages of members in mixed set
     for percentage_members in percentage_members_in_mixed:
         current_values = {}
-        #how many members, non-members should be in mixed set
-        amount_members_in_mixed = int(amount_data*percentage_members)
-        amount_non_members_in_mixed = int(amount_data*(1-percentage_members))
+        # how many members, non-members should be in mixed set
+        amount_members_in_mixed = int(amount_data * percentage_members)
+        amount_non_members_in_mixed = int(amount_data * (1 - percentage_members))
         # get random indexes for elements for mixed and non-member set, according to how many member & non-member elements should be in mixed
-        #mixed
-        positions_members_in_mixed = torch.randperm(amount_data)[:amount_members_in_mixed]
-        positions_non_members_in_mixed = torch.randperm(amount_data)[:amount_non_members_in_mixed]
-        #non-member
+        # mixed
+        positions_members_in_mixed = torch.randperm(amount_data)[
+            :amount_members_in_mixed
+        ]
+        positions_non_members_in_mixed = torch.randperm(amount_data)[
+            :amount_non_members_in_mixed
+        ]
+        # non-member
         positions_non_members = torch.randperm(amount_data)[:amount_data]
-        #get actual elements
+        # get actual elements
         members_in_mixed = outputs_regressor_train[positions_members_in_mixed]
-        non_members_in_mixed = outputs_regressor_test_member_fake[positions_non_members_in_mixed]
+        non_members_in_mixed = outputs_regressor_test_member_fake[
+            positions_non_members_in_mixed
+        ]
         non_members = outputs_regressor_test[positions_non_members]
-        #create mixed set
-        mixed_set = torch.cat((members_in_mixed, non_members_in_mixed), dim = 0)
+        # create mixed set
+        mixed_set = torch.cat((members_in_mixed, non_members_in_mixed), dim=0)
         # remove non_member from mixed set --> get p-value --> put non-member back in
-        #repeat for each non-member
-        #first non-member is at index amount_members_in_mixed+1 in mixed set and last non-member is the last index, so equals amount_data
-        p_values_removed_non_members = get_p_value_without_one_point_for_whole_range(mixed_set, non_members, start_index= amount_members_in_mixed+1, end_index=amount_data)
+        # repeat for each non-member
+        # first non-member is at index amount_members_in_mixed+1 in mixed set and last non-member is the last index, so equals amount_data
+        p_values_removed_non_members = get_p_value_without_one_point_for_whole_range(
+            mixed_set,
+            non_members,
+            start_index=amount_members_in_mixed + 1,
+            end_index=amount_data,
+        )
         current_values["p-values removed non-members"] = p_values_removed_non_members
-        #repeat for removing members
-        p_values_removed_members = get_p_value_without_one_point_for_whole_range(mixed_set, non_members, start_index=0, end_index=amount_non_members_in_mixed)
+        # repeat for removing members
+        p_values_removed_members = get_p_value_without_one_point_for_whole_range(
+            mixed_set, non_members, start_index=0, end_index=amount_non_members_in_mixed
+        )
         current_values["p-values removed members"] = p_values_removed_members
-        experiment["Percentage members in mixed set {}".format(percentage_members)] = current_values
+        experiment[
+            "Percentage members in mixed set {}".format(percentage_members)
+        ] = current_values
     with open(
         PATH_EXPERIMENT_3,
         "wb",
@@ -320,8 +338,7 @@ else:
         experiment_3_1 = pickle.load(f)
 
 
-
-def plot_p_value( p_values, title: str, name_x_column: str, data_x_column, x_label:str ):
+def plot_p_value(p_values, title: str, name_x_column: str, data_x_column, x_label: str):
     """
     Plot p-values as lineplot
 
@@ -336,8 +353,10 @@ def plot_p_value( p_values, title: str, name_x_column: str, data_x_column, x_lab
     dataframe = pd.DataFrame(data)
 
     plt.clf()
-    ax = sns.lineplot(x=name_x_column, y="p_values", data=dataframe, marker = 'o', ci = "sd")
-    #if line is not wanted for e.g. experiment 1: change to scatterplot TODO
+    ax = sns.lineplot(
+        x=name_x_column, y="p_values", data=dataframe, marker="o", ci="sd"
+    )
+    # if line is not wanted for e.g. experiment 1: change to scatterplot TODO
     ax.set_xlabel(x_label)
     ax.set_ylabel("p-value")
     ax.set_title(title)
@@ -345,7 +364,13 @@ def plot_p_value( p_values, title: str, name_x_column: str, data_x_column, x_lab
 
 
 # plot repetitions together
-def plot_mean_p_values_all_percentages(experiment, title: str, percentage_members_in_mixed, name_x_column: str, x_label:str) -> None:
+def plot_mean_p_values_all_percentages(
+    experiment,
+    title: str,
+    percentage_members_in_mixed,
+    name_x_column: str,
+    x_label: str,
+) -> None:
     """
     Plot mean of p-values for all distributions of members in mixed set.
     Plot mean for extracted members and non-members seperately
@@ -361,20 +386,43 @@ def plot_mean_p_values_all_percentages(experiment, title: str, percentage_member
     p_values = []
     data_x_column_member = []
     data_x_column_non_member = []
-    p_values_removed_members =[]
-    p_values_removed_non_members= []
-    for percentage_member in (percentage_members_in_mixed):
-        #TODO why one p-value more for members?
-        #append all the elements from the lists
-        for p_value in (experiment["Percentage members in mixed set {}".format(percentage_member)]['p-values removed members']):
+    p_values_removed_members = []
+    p_values_removed_non_members = []
+    for percentage_member in percentage_members_in_mixed:
+        # TODO why one p-value more for members?
+        # append all the elements from the lists
+        for p_value in experiment[
+            "Percentage members in mixed set {}".format(percentage_member)
+        ]["p-values removed members"]:
             p_values_removed_members.append(p_value)
             data_x_column_member.append(percentage_member)
-        for p_value in (experiment["Percentage members in mixed set {}".format(percentage_member)]["p-values removed non-members"]):
+        for p_value in experiment[
+            "Percentage members in mixed set {}".format(percentage_member)
+        ]["p-values removed non-members"]:
             p_values_removed_non_members.append(p_value)
             data_x_column_non_member.append(percentage_member)
-    #mean gets plot automatically for each category of x column values (so e.g. for all 0.1 % of members --> overall mean is calculated)
-    plot_p_value( p_values=p_values_removed_members, title="Exp. 3.1.1, removal of members", name_x_column = name_x_column, data_x_column=data_x_column_member, x_label=x_label)
-    plot_p_value( p_values=p_values_removed_non_members, title="Exp. 3.1.1, removal of non-members", name_x_column = name_x_column, data_x_column=data_x_column_non_member, x_label=x_label)
+    # mean gets plot automatically for each category of x column values (so e.g. for all 0.1 % of members --> overall mean is calculated)
+    plot_p_value(
+        p_values=p_values_removed_members,
+        title="Exp. 3.1.1, removal of members",
+        name_x_column=name_x_column,
+        data_x_column=data_x_column_member,
+        x_label=x_label,
+    )
+    plot_p_value(
+        p_values=p_values_removed_non_members,
+        title="Exp. 3.1.1, removal of non-members",
+        name_x_column=name_x_column,
+        data_x_column=data_x_column_non_member,
+        x_label=x_label,
+    )
 
-#TODO why goes one graph only until 0.9?
-plot_mean_p_values_all_percentages(experiment=experiment_3_1, title="Exp. 3.1.1", percentage_members_in_mixed= percentage_members_in_mixed, name_x_column="Percentage of members in mixed set", x_label="Percentage of members in mixed set")
+
+# TODO why goes one graph only until 0.9?
+plot_mean_p_values_all_percentages(
+    experiment=experiment_3_1,
+    title="Exp. 3.1.1",
+    percentage_members_in_mixed=percentage_members_in_mixed,
+    name_x_column="Percentage of members in mixed set",
+    x_label="Percentage of members in mixed set",
+)

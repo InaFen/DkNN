@@ -482,7 +482,7 @@ def feature_extractor_MIA(
     test_distance_path: str = "/home/inafen/jupyter_notebooks/dataset_inference/test_distance_vulerability.pt",
     train_distance_path: str = "/home/inafen/jupyter_notebooks/dataset_inference/train_distance_vulerability.pt",
     model_path: str = "/home/inafen/jupyter_notebooks/dataset_inference/model_torch.pth",
-    num_images: int = 1000
+    num_images: int = 1000,
 ) -> None:
     """
     Specialized feature extractor for MIA for CIFAR10 dataset
@@ -497,7 +497,7 @@ def feature_extractor_MIA(
         dataset="CIFAR10", batch_size=100, pseudo_labels=False, train_shuffle=False
     )
     # IF: get model
-    #IF: always change to model that is currently used #TODO
+    # IF: always change to model that is currently used #TODO
     student = mobilenet_v2(pretrained=True)
 
     try:

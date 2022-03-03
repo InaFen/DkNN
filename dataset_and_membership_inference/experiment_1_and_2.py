@@ -33,16 +33,55 @@ start = timeit.default_timer()
 
 amount_repetitions = 10
 
-#for experiment 1
-data_amounts = [200, 195, 190, 185, 180, 175, 170, 165, 160, 155, 150, 145, 140, 135, 130, 125, 120, 115, 110, 105, 100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5]
+# for experiment 1
+data_amounts = [
+    200,
+    195,
+    190,
+    185,
+    180,
+    175,
+    170,
+    165,
+    160,
+    155,
+    150,
+    145,
+    140,
+    135,
+    130,
+    125,
+    120,
+    115,
+    110,
+    105,
+    100,
+    95,
+    90,
+    85,
+    80,
+    75,
+    70,
+    65,
+    60,
+    55,
+    50,
+    45,
+    40,
+    35,
+    30,
+    25,
+    20,
+    15,
+    10,
+    5,
+]
 
-#experiment 2
+# experiment 2
 amount_members = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
-amount_data_from_dataset = (
-    600
-)  # how much data should be used to get distances, double amount_data because non-members have to be split (see down below)
+amount_data_from_dataset = 600  # how much data should be used to get distances, double amount_data because non-members have to be split (see down below)
 amount_data = 300  # how much data should be used for p-value , for each dataset #TODO change to smaller amount to have more random options
-#TODO check standard deviation at 200 --> negative??
+# TODO check standard deviation at 200 --> negative??
 
 torch.manual_seed(0)
 np.random.seed(0)
@@ -79,7 +118,7 @@ if not (path.exists(PATH_MODEL_TORCH)):
         testset, batch_size=batch_size, shuffle=False, num_workers=2
     )
 
-    #get pretrained model
+    # get pretrained model
     model = mobilenet_v2(pretrained=True)
     model.eval()  # for evaluation --> if model was to be trained more, switch back to model.train()
 
@@ -105,7 +144,7 @@ if not (path.exists(PATH_MODEL_TORCH)):
     print(
         f"Accuracy of the network on the 10000 test images: {100 * correct // total} %"
     )
-    #Accuracy of the network on the 10000 test images: 88 %
+    # Accuracy of the network on the 10000 test images: 88 %
 
     print("Get train accuracy")
     correct = 0
@@ -124,35 +163,30 @@ if not (path.exists(PATH_MODEL_TORCH)):
     print(
         f"Accuracy of the network on the 50000 train images: {100 * correct // total} %"
     )
-    #Accuracy of the network on the 50000 train images: 93 %
+    # Accuracy of the network on the 50000 train images: 93 %
 
 # get distances via feature extractor or load distances for amount_data_from_dataset elements each
-if not os.path.exists(
-    PATH_TRAIN_VULNERABILITY
-) or not os.path.exists(
+if not os.path.exists(PATH_TRAIN_VULNERABILITY) or not os.path.exists(
     PATH_TEST_VULNERABILITY
 ):
     # generate features for amount_data_from_dataset elements each
-    feature_extractor_MIA(num_images=amount_data_from_dataset, test_distance_path=PATH_TEST_VULNERABILITY, train_distance_path=PATH_TRAIN_VULNERABILITY, model_path=PATH_MODEL_TORCH)
+    feature_extractor_MIA(
+        num_images=amount_data_from_dataset,
+        test_distance_path=PATH_TEST_VULNERABILITY,
+        train_distance_path=PATH_TRAIN_VULNERABILITY,
+        model_path=PATH_MODEL_TORCH,
+    )
     # get distances of test and train set (for amount_data_from_dataset elements each)
-    test_distance = torch.load(
-        PATH_TEST_VULNERABILITY
-    )
-    train_distance = torch.load(
-        PATH_TRAIN_VULNERABILITY
-    )
+    test_distance = torch.load(PATH_TEST_VULNERABILITY)
+    train_distance = torch.load(PATH_TRAIN_VULNERABILITY)
 else:
     # get distances of test and train set (for amount_data_from_dataset elements each)
-    test_distance = torch.load(
-        PATH_TEST_VULNERABILITY
-    )
-    train_distance = torch.load(
-        PATH_TRAIN_VULNERABILITY
-    )
+    test_distance = torch.load(PATH_TEST_VULNERABILITY)
+    train_distance = torch.load(PATH_TRAIN_VULNERABILITY)
 
 # train regression model
 # code base source: https://github.com/cleverhans-lab/dataset-inference/blob/main/src/notebooks/CIFAR10_mingd.ipynb
-split_index = 100 #TODO change to 500
+split_index = 100  # TODO change to 500
 
 # mean distance of training data (sum distances/ amount distances)
 # for each distance type (linf, l2, l1)
@@ -251,9 +285,7 @@ outputs_regressor_train = model(train_distance_sorted_distance_types)
 outputs_regressor_test = model(tests_distance_sorted_distance_types)
 
 # experiment 1: random data used for each data amount
-if not os.path.exists(
-    PATH_EXPERIMENT_1
-):
+if not os.path.exists(PATH_EXPERIMENT_1):
     experiment_1_members = {}
     outputs_regressor_member_total = outputs_regressor_train.shape[0]
     for repetition in range(amount_repetitions):
@@ -297,13 +329,11 @@ else:
 
 # split outputs_regressor_test in test data (non-member) used for p-value & test data used as part of "member" data used for p-value
 outputs_regressor_test_non_member, outputs_regressor_test_member_fake = torch.split(
-    outputs_regressor_test, int(amount_data_from_dataset//2)
+    outputs_regressor_test, int(amount_data_from_dataset // 2)
 )
 
 
-if not os.path.exists(
-    PATH_EXPERIMENT_2
-):
+if not os.path.exists(PATH_EXPERIMENT_2):
     experiment_2_members = {}
     outputs_regressor_member_fake_total = outputs_regressor_test_member_fake.shape[0]
     for repetition in range(amount_repetitions):
@@ -332,7 +362,7 @@ if not os.path.exists(
             # Create member set out of non-members and members
             outputs_regressor_member_and_fake_member = torch.cat(
                 (outputs_regressor_member, outputs_regressor_member_fake), 0
-            ) #TODO why 299 instead of 300 elements?
+            )  # TODO why 299 instead of 300 elements?
             if torch.eq(
                 outputs_regressor_member[0], outputs_regressor_non_member[0]
             ):  # TODO (also for following experiments) when values absolutely same --> p value nan
@@ -354,7 +384,9 @@ if not os.path.exists(
             experiment_2_members_repetition[
                 f"percentage members: {percentage_members}"
             ] = experiment_2_members_percentage_member
-        experiment_2_members[f"repetition: {repetition}"] = experiment_2_members_repetition
+        experiment_2_members[
+            f"repetition: {repetition}"
+        ] = experiment_2_members_repetition
         with open(
             PATH_EXPERIMENT_2,
             "wb",
@@ -369,7 +401,7 @@ else:
         experiment_2_members = pickle.load(f)
 
 
-def plot_p_value( p_values, title: str, name_x_column: str, data_x_column, x_label:str ):
+def plot_p_value(p_values, title: str, name_x_column: str, data_x_column, x_label: str):
     """
     Plot p-values as lineplot
 
@@ -384,25 +416,34 @@ def plot_p_value( p_values, title: str, name_x_column: str, data_x_column, x_lab
     dataframe = pd.DataFrame(data)
 
     plt.clf()
-    ax = sns.lineplot(x=name_x_column, y="p_values", data=dataframe, marker = 'o', ci = "sd")
+    ax = sns.lineplot(
+        x=name_x_column, y="p_values", data=dataframe, marker="o", ci="sd"
+    )
     ax.set_xlabel(x_label)
     ax.set_ylabel("p-value")
     ax.set_title(title)
-    #plt.text(-38, -0.38,
+    # plt.text(-38, -0.38,
     #         "Dataset Inference attack on member sets, mean of p-values over 10 repetitions \nModel information: MobileNetV2 | Train accuracy: 93 %  | Test accuracy: 88 % \nP-value calculation: Amount of random elements in mixed and non-member set each: 300 \n ",
     #         fontsize=10, bbox={'facecolor': '.9', 'boxstyle': 'square', 'edgecolor': '.9'})
-    #plt.subplots_adjust(bottom=0.3)
-    plt.text(-0.075, -0.0007,
-             "Dataset Inference attack on mixed (members and non-members) sets\n--> mean of p-values over 10 repetitions \nModel information: MobileNetV2 | Train accuracy: 93 %  | Test accuracy: 88 % \nP-value calculation: Amount of random elements in mixed and non-member set each: 300 \n ",
-             fontsize=10, bbox={'facecolor': '.9', 'boxstyle': 'square', 'edgecolor': '.9'})
+    # plt.subplots_adjust(bottom=0.3)
+    plt.text(
+        -0.075,
+        -0.0007,
+        "Dataset Inference attack on mixed (members and non-members) sets\n--> mean of p-values over 10 repetitions \nModel information: MobileNetV2 | Train accuracy: 93 %  | Test accuracy: 88 % \nP-value calculation: Amount of random elements in mixed and non-member set each: 300 \n ",
+        fontsize=10,
+        bbox={"facecolor": ".9", "boxstyle": "square", "edgecolor": ".9"},
+    )
     plt.subplots_adjust(bottom=0.3)
-    plt.savefig("/home/inafen/jupyter_notebooks/dataset_and_membership_inference/exp_2_mean.png")
+    plt.savefig(
+        "/home/inafen/jupyter_notebooks/dataset_and_membership_inference/exp_2_mean.png"
+    )
     plt.show()
 
 
-
 # plot repetition individually
-def plot_repetition_in_one_graph(experiment, title: str, name_x_column: str, amounts, x_label: str) -> None:
+def plot_repetition_in_one_graph(
+    experiment, title: str, name_x_column: str, amounts, x_label: str
+) -> None:
     """
     Plot p-values for all repetitions in one graph
 
@@ -422,27 +463,52 @@ def plot_repetition_in_one_graph(experiment, title: str, name_x_column: str, amo
                 experiment[f"repetition: {repetition}"][f"{name_x_column}: {amount}"][
                     "p value"
                 ]
-
             )
             data_x_column.append(amount)
             repetitions.append(repetition)
 
-    data = {name_x_column: data_x_column, "p_values": p_values, "repetitions": repetitions}
+    data = {
+        name_x_column: data_x_column,
+        "p_values": p_values,
+        "repetitions": repetitions,
+    }
     dataframe = pd.DataFrame(data)
     print(dataframe.head())
     plt.clf()
-    ax = sns.lineplot(x=name_x_column, y="p_values", data=dataframe, marker='o', hue = "repetitions", palette = "hls")
+    ax = sns.lineplot(
+        x=name_x_column,
+        y="p_values",
+        data=dataframe,
+        marker="o",
+        hue="repetitions",
+        palette="hls",
+    )
     ax.set_xlabel(x_label)
     ax.set_ylabel("p-value")
     ax.set_title(title)
-    plt.text(-0.08,-0.001, "Dataset Inference attack on mixed (members and non-members) sets \nModel information: MobileNetV2 | Train accuracy: 93 %  | Test accuracy: 88 % \nP-value calculation: Amount of random elements in mixed and non-member set each: 300 \n ", fontsize = 10, bbox={'facecolor': '.9', 'boxstyle':'square', 'edgecolor': '.9'} )
+    plt.text(
+        -0.08,
+        -0.001,
+        "Dataset Inference attack on mixed (members and non-members) sets \nModel information: MobileNetV2 | Train accuracy: 93 %  | Test accuracy: 88 % \nP-value calculation: Amount of random elements in mixed and non-member set each: 300 \n ",
+        fontsize=10,
+        bbox={"facecolor": ".9", "boxstyle": "square", "edgecolor": ".9"},
+    )
     plt.subplots_adjust(bottom=0.3)
-    plt.savefig("/home/inafen/jupyter_notebooks/dataset_and_membership_inference/exp_2_all_repetitions.png")
+    plt.savefig(
+        "/home/inafen/jupyter_notebooks/dataset_and_membership_inference/exp_2_all_repetitions.png"
+    )
     plt.show()
 
 
 # plot repetitions together
-def plot_mean_all_repetitions(experiment, title: str, amount_repetitions: int, name_x_column: str, amounts, x_label:str) -> None:
+def plot_mean_all_repetitions(
+    experiment,
+    title: str,
+    amount_repetitions: int,
+    name_x_column: str,
+    amounts,
+    x_label: str,
+) -> None:
     """
     Plot mean of p-values for all repetitions.
 
@@ -461,26 +527,37 @@ def plot_mean_all_repetitions(experiment, title: str, amount_repetitions: int, n
             p_values.append(
                 experiment[f"repetition: {repetition}"][f"{name_x_column}: {amount}"][
                     "p value"
-                ])
+                ]
+            )
             data_x_column.append(amount)
-    #mean gets plot automatically for each category of x column values (so e.g. for all 0.1 % of members --> overall mean is calculated)
-    plot_p_value( p_values=p_values, title=title, name_x_column = name_x_column, data_x_column=data_x_column, x_label=x_label)
+    # mean gets plot automatically for each category of x column values (so e.g. for all 0.1 % of members --> overall mean is calculated)
+    plot_p_value(
+        p_values=p_values,
+        title=title,
+        name_x_column=name_x_column,
+        data_x_column=data_x_column,
+        x_label=x_label,
+    )
 
 
-
-#plot experiments
-#plot_mean_all_repetitions(
+# plot experiments
+# plot_mean_all_repetitions(
 #    experiment_1_members, title="Exp. 1, mean over 10 repetitions", amount_repetitions= amount_repetitions, name_x_column="data amount", amounts=data_amounts, x_label="Number of samples revealed"
-#)
+# )
 
-#plot_repetition_in_one_graph(
+# plot_repetition_in_one_graph(
 #    experiment_2_members, title="Exp. 2, all repetitions plotted separately", name_x_column="percentage members", amounts=amount_members, x_label="Percentage of members in mixed set"
-#)  #: Random non-members, percentage of random members and non-members as <<members>>")
+# )  #: Random non-members, percentage of random members and non-members as <<members>>")
 plot_mean_all_repetitions(
-    experiment_2_members, title="Exp. 2, mean over 10 repetitions", amount_repetitions= amount_repetitions, name_x_column="percentage members", amounts=amount_members, x_label="Percentage of members"
+    experiment_2_members,
+    title="Exp. 2, mean over 10 repetitions",
+    amount_repetitions=amount_repetitions,
+    name_x_column="percentage members",
+    amounts=amount_members,
+    x_label="Percentage of members",
 )  #: Random non-members, percentage of random members and non-members as <<members>>")
 
 
 stop = timeit.default_timer()
 
-print('Time: ', stop - start)
+print("Time: ", stop - start)
