@@ -300,7 +300,7 @@ if not os.path.exists(
     experiment_1_1_members = {}
     outputs_regressor_member_total = outputs_regressor_train.shape[0]
     for iteration in range(amount_iterations):
-        experiment_1_1_members_iteration = {}
+        experiment_1_1_members_iteration = {} #TODO isnt used down below
         for data_amount in data_amounts:
             # get data_amount points (point = prediction from regressor for a point)
             # get random elements from train and test set

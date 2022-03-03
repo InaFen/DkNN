@@ -19,6 +19,8 @@ from cleverhans_dataset_inference.src.attacks import (
     l1_dir_topk,
 )
 import sys
+from models_torch_cifar import mobilenet_v2
+
 
 # sys.path.append("./model_src/")
 from models_torch import Net
@@ -479,6 +481,7 @@ def feature_extractor_MIA(
     device: str = "cpu",
     test_distance_path: str = "/home/inafen/jupyter_notebooks/dataset_inference/test_distance_vulerability.pt",
     train_distance_path: str = "/home/inafen/jupyter_notebooks/dataset_inference/train_distance_vulerability.pt",
+    model_path: str = "/home/inafen/jupyter_notebooks/dataset_inference/model_torch.pth",
     num_images: int = 1000
 ) -> None:
     """
@@ -488,18 +491,20 @@ def feature_extractor_MIA(
     :param test_distance_path: Path where distances from test data should be saved
     :param train_distance_path: Path where distances from train data should be saved
     :param num_images: For how many images distances should be calculated
+    :param model_path: path to trained model
     """
     train_loader, test_loader = get_dataloaders_MIA(
         dataset="CIFAR10", batch_size=100, pseudo_labels=False, train_shuffle=False
     )
-
     # IF: get model
-    student = Net()
+    #IF: always change to model that is currently used #TODO
+    student = mobilenet_v2(pretrained=True)
+
     try:
         student = student.to(device)
         student.load_state_dict(
             torch.load(
-                "/home/inafen/jupyter_notebooks/dataset_inference/model_torch.pth",
+                model_path,
                 map_location=device,
             )
         )
@@ -507,7 +512,7 @@ def feature_extractor_MIA(
         student = nn.DataParallel(student).to(device)
         student.load_state_dict(
             torch.load(
-                "/home/inafen/jupyter_notebooks/dataset_inference/model_torch.pth",
+                model_path,
                 map_location=device,
             )
         )
