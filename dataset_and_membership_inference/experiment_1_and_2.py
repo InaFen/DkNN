@@ -42,8 +42,8 @@ amount_data_from_dataset = (
     600
 )  # how much data should be used to get distances, double amount_data because non-members have to be split (see down below)
 amount_data = 300  # how much data should be used for p-value , for each dataset #TODO change to smaller amount to have more random options
+#TODO check standard deviation at 200 --> negative??
 
-#TODO depending on seed success of experiments changes
 torch.manual_seed(0)
 np.random.seed(0)
 random.seed(0)
@@ -388,36 +388,16 @@ def plot_p_value( p_values, title: str, name_x_column: str, data_x_column, x_lab
     ax.set_xlabel(x_label)
     ax.set_ylabel("p-value")
     ax.set_title(title)
+    #plt.text(-38, -0.38,
+    #         "Dataset Inference attack on member sets, mean of p-values over 10 repetitions \nModel information: MobileNetV2 | Train accuracy: 93 %  | Test accuracy: 88 % \nP-value calculation: Amount of random elements in mixed and non-member set each: 300 \n ",
+    #         fontsize=10, bbox={'facecolor': '.9', 'boxstyle': 'square', 'edgecolor': '.9'})
+    #plt.subplots_adjust(bottom=0.3)
+    plt.text(-0.075, -0.0007,
+             "Dataset Inference attack on mixed (members and non-members) sets\n--> mean of p-values over 10 repetitions \nModel information: MobileNetV2 | Train accuracy: 93 %  | Test accuracy: 88 % \nP-value calculation: Amount of random elements in mixed and non-member set each: 300 \n ",
+             fontsize=10, bbox={'facecolor': '.9', 'boxstyle': 'square', 'edgecolor': '.9'})
+    plt.subplots_adjust(bottom=0.3)
+    plt.savefig("/home/inafen/jupyter_notebooks/dataset_and_membership_inference/exp_2_mean.png")
     plt.show()
-
-
-
-# plot repetition individually
-def plot_repetition(experiment, title: str, name_x_column: str, data_x_column, x_label:str) -> None:
-    """
-    Plot p-values for one repetition
-
-    :param experiment: dataframe with experiment information
-    :param title: title of plot
-    :param name_x_column: Name of df column which values will be used for x-axis (e.g. data amount, percentage members)
-    :param data_x_column: Data of df column which values will be used for x-axis (e.g. amounts_data, amounts_member)
-    :param x_label: Label for x-axis (e.g. "Number of samples revealed", "Percentage of members")
-    :return: None
-    """
-    for repetition in range(amount_repetitions):
-        p_values_repetition = []
-        for amount in data_x_column:
-            p_values_repetition.append(
-                experiment[f"repetition: {repetition}"][f"{name_x_column}: {amount}"][
-                    "p value"
-                ]
-
-            )
-        title_repetition = title.format(repetition)
-        print(title_repetition)
-        plot_p_value(
-            p_values=p_values_repetition, title=title_repetition, name_x_column = name_x_column, data_x_column=data_x_column, x_label=x_label
-        )
 
 
 
@@ -455,41 +435,11 @@ def plot_repetition_in_one_graph(experiment, title: str, name_x_column: str, amo
     ax.set_xlabel(x_label)
     ax.set_ylabel("p-value")
     ax.set_title(title)
-    #TODO finish texts
-    plt.text(0.06,-0.001, "General information \n Model information: Train accuracy: 93 %  | Test accuracy: 88 % \n Amount of elements in mixed and non-member set each: 300 \n ", fontsize = 10, bbox={'facecolor': '.9', 'boxstyle':'square', 'edgecolor': '.9'} )
+    plt.text(-0.08,-0.001, "Dataset Inference attack on mixed (members and non-members) sets \nModel information: MobileNetV2 | Train accuracy: 93 %  | Test accuracy: 88 % \nP-value calculation: Amount of random elements in mixed and non-member set each: 300 \n ", fontsize = 10, bbox={'facecolor': '.9', 'boxstyle':'square', 'edgecolor': '.9'} )
     plt.subplots_adjust(bottom=0.3)
+    plt.savefig("/home/inafen/jupyter_notebooks/dataset_and_membership_inference/exp_2_all_repetitions.png")
     plt.show()
 
-#TODO why slightly different results so repetitions_1?
-# plot repetitions together
-def plot_mean_all_repetitions_old(experiment, title: str, amount_repetitions: int, name_x_column: str, data_x_column, x_label:str) -> None:
-    """
-    Plot mean of p-values for all repetitions.
-
-    :param experiment: dataframe with experiment information
-    :param title: title of plot
-    :param amount_repetitions: how many times the experiment was repeated
-    :param name_x_column: Name of df column which values will be used for x-axis (e.g. amounts_data, amounts_member)
-    :param data_x_column: Data of df column which values will be used for x-axis (e.g. amounts_data, amounts_member)
-    :param x_label: Label for x-axis (e.g. "Number of samples revealed", "Percentage of members")
-    :return: None
-    """
-    p_values = [[] for i in range(len(data_amounts))]
-    for repetition in range(amount_repetitions):
-        p_values_repetition = []
-        for amount in data_x_column:
-            p_values_repetition.append(
-                experiment[f"repetition: {repetition}"][f"{name_x_column}: {amount}"][
-                    "p value"
-                ]
-            )
-        for amount_index in range(len(data_x_column)):
-            p_values[amount_index].append(p_values_repetition[amount_index])
-    # get mean of p values
-    p_values_mean = []
-    for data_amount_index in range(len(data_amounts)):
-        p_values_mean.append(mean(p_values[data_amount_index]))
-    plot_p_value( p_values=p_values_mean, title=title, name_x_column = name_x_column, data_x_column=data_x_column, x_label=x_label)
 
 # plot repetitions together
 def plot_mean_all_repetitions(experiment, title: str, amount_repetitions: int, name_x_column: str, amounts, x_label:str) -> None:
@@ -519,13 +469,13 @@ def plot_mean_all_repetitions(experiment, title: str, amount_repetitions: int, n
 
 
 #plot experiments
-plot_mean_all_repetitions(
-    experiment_1_members, title="Exp. 1", amount_repetitions= amount_repetitions, name_x_column="data amount", amounts=data_amounts, x_label="Number of samples revealed"
-)
+#plot_mean_all_repetitions(
+#    experiment_1_members, title="Exp. 1, mean over 10 repetitions", amount_repetitions= amount_repetitions, name_x_column="data amount", amounts=data_amounts, x_label="Number of samples revealed"
+#)
 
-plot_repetition_in_one_graph(
-    experiment_2_members, title="Exp. 2, all repetitions", name_x_column="percentage members", amounts=amount_members, x_label="Percentage of members"
-)  #: Random non-members, percentage of random members and non-members as <<members>>")
+#plot_repetition_in_one_graph(
+#    experiment_2_members, title="Exp. 2, all repetitions plotted separately", name_x_column="percentage members", amounts=amount_members, x_label="Percentage of members in mixed set"
+#)  #: Random non-members, percentage of random members and non-members as <<members>>")
 plot_mean_all_repetitions(
     experiment_2_members, title="Exp. 2, mean over 10 repetitions", amount_repetitions= amount_repetitions, name_x_column="percentage members", amounts=amount_members, x_label="Percentage of members"
 )  #: Random non-members, percentage of random members and non-members as <<members>>")
